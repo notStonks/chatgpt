@@ -14,6 +14,7 @@ class Database:
 
         self.user_collection = self.db["user"]
         self.dialog_collection = self.db["dialog"]
+        self.order_collection = self.db["order"]
 
     def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
         if self.user_collection.count_documents({"_id": user_id}) > 0:
@@ -25,12 +26,12 @@ class Database:
                 return False
 
     def add_new_user(
-        self,
-        user_id: int,
-        chat_id: int,
-        username: str = "",
-        first_name: str = "",
-        last_name: str = "",
+            self,
+            user_id: int,
+            chat_id: int,
+            username: str = "",
+            first_name: str = "",
+            last_name: str = "",
     ):
         user_dict = {
             "_id": user_id,
@@ -48,6 +49,8 @@ class Database:
             "current_model": config.models["available_text_models"][0],
 
             "n_used_tokens": {},
+
+            # "n_remaining_tokens": 5000,
 
             "n_generated_images": 0,
             "n_transcribed_seconds": 0.0  # voice message transcription
@@ -80,6 +83,25 @@ class Database:
 
         return dialog_id
 
+    def add_new_order(self, user_id: int):
+        order_id = str(uuid.uuid4())
+        id = str(uuid.uuid4())
+
+        order_dict = {
+            "_id": id,
+            "user_id": user_id,
+            "order_id": order_id
+        }
+
+        self.order_collection.insert_one(order_dict)
+
+        return order_id
+
+    def get_user_id(self, order_id: str):
+        order_dict = self.order_collection.find_one({"order_id": order_id})
+
+        return order_dict["user_id"]
+
     def get_user_attribute(self, user_id: int, key: str):
         self.check_if_user_exists(user_id, raise_exception=True)
         user_dict = self.user_collection.find_one({"_id": user_id})
@@ -93,19 +115,34 @@ class Database:
         self.check_if_user_exists(user_id, raise_exception=True)
         self.user_collection.update_one({"_id": user_id}, {"$set": {key: value}})
 
+    def update_n_remaining_tokens(self, user_id: int,  tokens_amount: int):
+        n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
+        model = self.get_user_attribute(user_id, "current_model")
+
+        n_used_tokens_dict[model]["n_remaining_tokens"] += tokens_amount
+
+        self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+
     def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
         n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
+        # n_remaining_tokens = self.get_user_attribute(user_id, "n_remaining_tokens")
 
         if model in n_used_tokens_dict:
             n_used_tokens_dict[model]["n_input_tokens"] += n_input_tokens
             n_used_tokens_dict[model]["n_output_tokens"] += n_output_tokens
+            n_used_tokens_dict[model]["n_remaining_tokens"] -= n_input_tokens + n_output_tokens
+
         else:
             n_used_tokens_dict[model] = {
                 "n_input_tokens": n_input_tokens,
-                "n_output_tokens": n_output_tokens
+                "n_output_tokens": n_output_tokens,
+                "n_remaining_tokens": config.tokens_limit_for_new_user - n_input_tokens - n_output_tokens
             }
 
+        # n_remaining_tokens -= n_input_tokens + n_output_tokens
+
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+        # self.set_user_attribute(user_id, "n_remaining_tokens", n_remaining_tokens)
 
     def get_dialog_messages(self, user_id: int, dialog_id: Optional[str] = None):
         self.check_if_user_exists(user_id, raise_exception=True)

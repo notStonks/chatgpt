@@ -20,6 +20,15 @@ enable_message_streaming = config_yaml.get("enable_message_streaming", True)
 return_n_generated_images = config_yaml.get("return_n_generated_images", 1)
 n_chat_modes_per_page = config_yaml.get("n_chat_modes_per_page", 5)
 mongodb_uri = f"mongodb://mongo:{config_env['MONGODB_PORT']}"
+tokens_limit_for_new_user = config_yaml.get("tokens_limit_for_new_user")
+# tokens_limit_for_buying = config_yaml.get("tokens_limit_for_buying")
+terminal_key = config_yaml["terminal_key"]
+password = config_yaml["password"]
+notification_url = config_yaml["notification_url"]
+webhook_url = config_yaml["webhook_url"]
+# tokens_for_200 = config_yaml.get("tokens_for_200")
+# tokens_for_500 = config_yaml.get("tokens_for_500")
+# tokens_for_1000 = config_yaml.get("tokens_for_1000")
 
 # chat_modes
 with open(config_dir / "chat_modes.yml", 'r') as f:

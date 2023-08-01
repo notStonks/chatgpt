@@ -33,37 +33,39 @@ from telegram.constants import ParseMode, ChatAction
 import config
 import database
 import openai_utils
+from utils import get_buy_keyboard, get_payment_url
 
+from tinkoff import TinkoffPayment
 
 # setup
 db = database.Database()
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 user_semaphores = {}
 user_tasks = {}
 
-HELP_MESSAGE = """Commands:
-⚪ /retry – Regenerate last bot answer
-⚪ /new – Start new dialog
-⚪ /mode – Select chat mode
-⚪ /settings – Show settings
-⚪ /balance – Show balance
-⚪ /help – Show help
+HELP_MESSAGE = """Команды:
+⚪ /retry – Восстановить последний ответ бота
+⚪ /new – Начать новый диалог
+⚪ /mode – Выбрать режим чата
+⚪ /settings – Показать настройки
+⚪ /balance – Показать балас
+⚪ /help – Помощь
 
-🎨 Generate images from text prompts in <b>👩‍🎨 Artist</b> /mode
-👥 Add bot to <b>group chat</b>: /help_group_chat
-🎤 You can send <b>Voice Messages</b> instead of text
+👥 Добавить бота в <b>групповой чат</b>: /help_group_chat
+
 """
 
-HELP_GROUP_CHAT_MESSAGE = """You can add bot to any <b>group chat</b> to help and entertain its participants!
+HELP_GROUP_CHAT_MESSAGE = """Вы можете добавить и то, и другое в любой групповой чат, чтобы помогать и развлекать его участников!
 
-Instructions (see <b>video</b> below):
-1. Add the bot to the group chat
-2. Make it an <b>admin</b>, so that it can see messages (all other rights can be restricted)
-3. You're awesome!
+Инструкции (смотрите <b>видео</b> ниже):
+1. Добавьте бота в групповой чат
+2. Сделайте его <b> администратором</b>, чтобы он мог видеть сообщения (все остальные права могут быть ограничены)
+3. Ты потрясающий!
 
-To get a reply from the bot in the chat – @ <b>tag</b> it or <b>reply</b> to its message.
-For example: "{bot_username} write a poem about Telegram"
+Чтобы получить ответ от бота в чате – @ <b>пометьте</b> его или <b>ответьте</b> на его сообщение.
+Например: "{bot_username} напишите стихотворение о Telegram"
 """
 
 
@@ -81,6 +83,7 @@ async def register_user_if_not_exists(update: Update, context: CallbackContext, 
             first_name=user.first_name,
             last_name= user.last_name
         )
+        db.set_user_attribute(user.id, "n_remaining_tokens", config.tokens_limit_for_new_user)
         db.start_new_dialog(user.id)
 
     if db.get_user_attribute(user.id, "current_dialog_id") is None:
@@ -138,7 +141,7 @@ async def start_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     db.start_new_dialog(user_id)
 
-    reply_text = "Hi! I'm <b>ChatGPT</b> bot implemented with OpenAI API 🤖\n\n"
+    reply_text = "Привет! Я <b>бот ChatGPT</b>, реализованный с помощью Openal API 🤖\n\n"
     reply_text += HELP_MESSAGE
 
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
@@ -212,8 +215,14 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         if use_new_dialog_timeout:
             if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
                 db.start_new_dialog(user_id)
-                await update.message.reply_text(f"Starting new dialog due to timeout (<b>{config.chat_modes[chat_mode]['name']}</b> mode) ✅", parse_mode=ParseMode.HTML)
+                await update.message.reply_text(f"Запуск нового диалогового окна из-за тайм-аута (<b>{config.chat_modes[chat_mode]['name']}</b> режим) ✅", parse_mode=ParseMode.HTML)
         db.set_user_attribute(user_id, "last_interaction", datetime.now())
+
+        n_remaining_tokens = db.get_user_attribute(user_id, "n_remaining_tokens")
+
+        if n_remaining_tokens <= 0:
+            await update.message.reply_text("К сожалению закончились токены. Пополните баланс для продолжения общения...")
+            return
 
         # in case of CancelledError
         n_input_tokens, n_output_tokens = 0, 0
@@ -227,7 +236,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             await update.message.chat.send_action(action="typing")
 
             if _message is None or len(_message) == 0:
-                 await update.message.reply_text("🥲 You sent <b>empty message</b>. Please, try again!", parse_mode=ParseMode.HTML)
+                 await update.message.reply_text("🥲 Вы отправили <b>пустое сообщение</b>. Пожалуйста, попробуйте еще раз!", parse_mode=ParseMode.HTML)
                  return
 
             dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
@@ -297,9 +306,9 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         # send message if some messages were removed from the context
         if n_first_dialog_messages_removed > 0:
             if n_first_dialog_messages_removed == 1:
-                text = "✍️ <i>Note:</i> Your current dialog is too long, so your <b>first message</b> was removed from the context.\n Send /new command to start new dialog"
+                text = "✍️ <i>Примечание:</i> Ваш текущий диалог слишком длинный, поэтому ваше <b>первое сообщение</b> было удалено из контекста.\n Отправить /новая команда для запуска нового диалога"
             else:
-                text = f"✍️ <i>Note:</i> Your current dialog is too long, so <b>{n_first_dialog_messages_removed} first messages</b> were removed from the context.\n Send /new command to start new dialog"
+                text = f"✍️ <i>Примечание:</i> Ваш текущий диалог слишком длинный, поэтому <b>{n_first_dialog_messages_removed} первые сообщения</b> были удалены из контекста.\n Отправить /новая команда для запуска нового диалога"
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
     async with user_semaphores[user_id]:
@@ -309,7 +318,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         try:
             await task
         except asyncio.CancelledError:
-            await update.message.reply_text("✅ Canceled", parse_mode=ParseMode.HTML)
+            await update.message.reply_text("✅ Отмененно", parse_mode=ParseMode.HTML)
         else:
             pass
         finally:
@@ -322,8 +331,8 @@ async def is_previous_message_not_answered_yet(update: Update, context: Callback
 
     user_id = update.message.from_user.id
     if user_semaphores[user_id].locked():
-        text = "⏳ Please <b>wait</b> for a reply to the previous message\n"
-        text += "Or you can /cancel it"
+        text = "⏳ Пожалуйста, <b>дождитесь</b> ответа на предыдущее сообщение\n"
+        text += "Или вы можете /cancel (отменить) его"
         await update.message.reply_text(text, reply_to_message_id=update.message.id, parse_mode=ParseMode.HTML)
         return True
     else:
@@ -384,8 +393,8 @@ async def generate_image_handle(update: Update, context: CallbackContext, messag
     try:
         image_urls = await openai_utils.generate_images(message, n_images=config.return_n_generated_images)
     except openai.error.InvalidRequestError as e:
-        if str(e).startswith("Your request was rejected as a result of our safety system"):
-            text = "🥲 Your request <b>doesn't comply</b> with OpenAI's usage policies.\nWhat did you write there, huh?"
+        if str(e).startswith("Ваш запрос был отклонен в результате работы нашей системы безопасности"):
+            text = "🥲 Ваш запрос <b> не соответствует</b> политике использования OpenAI.\nЧто ты там написал, а?"
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
             return
         else:
@@ -407,7 +416,7 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     db.start_new_dialog(user_id)
-    await update.message.reply_text("Starting new dialog ✅")
+    await update.message.reply_text("Запуск нового диалога ✅")
 
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
     await update.message.reply_text(f"{config.chat_modes[chat_mode]['welcome_message']}", parse_mode=ParseMode.HTML)
@@ -423,12 +432,12 @@ async def cancel_handle(update: Update, context: CallbackContext):
         task = user_tasks[user_id]
         task.cancel()
     else:
-        await update.message.reply_text("<i>Nothing to cancel...</i>", parse_mode=ParseMode.HTML)
+        await update.message.reply_text("<i>Нечего отменять...</i>", parse_mode=ParseMode.HTML)
 
 
 def get_chat_mode_menu(page_index: int):
     n_chat_modes_per_page = config.n_chat_modes_per_page
-    text = f"Select <b>chat mode</b> ({len(config.chat_modes)} modes available):"
+    text = f"Выберите <b>режим чата</b> ({len(config.chat_modes)} режимов доступно):"
 
     # buttons
     chat_mode_keys = list(config.chat_modes.keys())
@@ -524,7 +533,7 @@ def get_settings_menu(user_id: int):
     for score_key, score_value in score_dict.items():
         text += "🟢" * score_value + "⚪️" * (5 - score_value) + f" – {score_key}\n\n"
 
-    text += "\nSelect <b>model</b>:"
+    text += "\nВыберите <b>модель</b>:"
 
     # buttons to choose models
     buttons = []
@@ -571,14 +580,28 @@ async def set_settings_handle(update: Update, context: CallbackContext):
             pass
 
 
+def get_balance_menu(user_id: int, current_model: str):
+    pay_sums = [200, 500, 1000]
+    current_model = db.get_user_attribute(user_id, "current_model")
+    # price = config.models["info"][current_model]["price_per_1000_output_tokens"]
+    buttons = []
+    for pay_sum in pay_sums:
+        tokens_for_sum = config.config_yaml[f"tokens_for_{pay_sum}_{current_model}"]
+        buttons.append(InlineKeyboardButton(text=f"Купить {tokens_for_sum} ток.\nза {pay_sum} руб.", callback_data=f"pay|{pay_sum}"))
+    inlinekeyboard = InlineKeyboardMarkup([[button] for button in buttons])
+
+    return inlinekeyboard
+
+
 async def show_balance_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
 
     user_id = update.message.from_user.id
+    current_model = db.get_user_attribute(user_id, "current_model")
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     # count total usage statistics
-    total_n_spent_dollars = 0
+    # total_n_spent_dollars = 0
     total_n_used_tokens = 0
 
     n_used_tokens_dict = db.get_user_attribute(user_id, "n_used_tokens")
@@ -587,40 +610,87 @@ async def show_balance_handle(update: Update, context: CallbackContext):
 
     details_text = "🏷️ Details:\n"
     for model_key in sorted(n_used_tokens_dict.keys()):
-        n_input_tokens, n_output_tokens = n_used_tokens_dict[model_key]["n_input_tokens"], n_used_tokens_dict[model_key]["n_output_tokens"]
+        n_input_tokens, n_output_tokens, n_remaining_tokens = n_used_tokens_dict[model_key]["n_input_tokens"], n_used_tokens_dict[model_key]["n_output_tokens"], \
+            n_used_tokens_dict[model_key]["n_remaining_tokens"]
         total_n_used_tokens += n_input_tokens + n_output_tokens
 
-        n_input_spent_dollars = config.models["info"][model_key]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
-        n_output_spent_dollars = config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
-        total_n_spent_dollars += n_input_spent_dollars + n_output_spent_dollars
-
-        details_text += f"- {model_key}: <b>{n_input_spent_dollars + n_output_spent_dollars:.03f}$</b> / <b>{n_input_tokens + n_output_tokens} tokens</b>\n"
+        # n_input_spent_dollars = config.models["info"][model_key]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
+        # n_output_spent_dollars = config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
+        # total_n_spent_dollars += n_input_spent_dollars + n_output_spent_dollars
+        if model_key == current_model:
+            details_text += "✅ "
+        else:
+            details_text += "- "
+        # details_text += f"{model_key}: <b>{n_input_spent_dollars + n_output_spent_dollars:.03f}$</b> / <b>{n_input_tokens + n_output_tokens} tokens</b>\n"
+        details_text += f"{model_key}: потрачено <b>{n_input_tokens + n_output_tokens} токенов</b>\n"
+        details_text += f"  Осталось токенов: {n_remaining_tokens}\n"
 
     # image generation
     image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
     if n_generated_images != 0:
-        details_text += f"- DALL·E 2 (image generation): <b>{image_generation_n_spent_dollars:.03f}$</b> / <b>{n_generated_images} generated images</b>\n"
+        # details_text += f"- DALL·E 2 (image generation): <b>{image_generation_n_spent_dollars:.03f}$</b> / <b>{n_generated_images} generated images</b>\n"
+        details_text += f"- DALL·E 2 (image generation): <b>{n_generated_images} generated images</b>\n"
 
-    total_n_spent_dollars += image_generation_n_spent_dollars
+    # total_n_spent_dollars += image_generation_n_spent_dollars
 
     # voice recognition
     voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (n_transcribed_seconds / 60)
     if n_transcribed_seconds != 0:
-        details_text += f"- Whisper (voice recognition): <b>{voice_recognition_n_spent_dollars:.03f}$</b> / <b>{n_transcribed_seconds:.01f} seconds</b>\n"
+        # details_text += f"- Whisper (voice recognition): <b>{voice_recognition_n_spent_dollars:.03f}$</b> / <b>{n_transcribed_seconds:.01f} seconds</b>\n"
+        details_text += f"- Whisper (voice recognition): <b>{n_transcribed_seconds:.01f} seconds</b>\n"
 
-    total_n_spent_dollars += voice_recognition_n_spent_dollars
+    # total_n_spent_dollars += voice_recognition_n_spent_dollars
+
+    # n_remaining_tokens = db.get_user_attribute(user_id, "n_remaining_tokens")
+
+    # text = f"You spent <b>{total_n_spent_dollars:.03f}$</b>\n"
+    text = f"Всего вы потратили <b>{total_n_used_tokens}</b> токенов\n\n"
+    # text += f"У вас осталось <b>{n_remaining_tokens}</b> токенов\n\n"
+    text += details_text + "\n"
+
+    text += "Купить токены для выбранной модели: \n"
+
+    markup = get_balance_menu(user_id, current_model)
+
+    await update.message.reply_text(text, reply_markup=markup, parse_mode=ParseMode.HTML)
 
 
-    text = f"You spent <b>{total_n_spent_dollars:.03f}$</b>\n"
-    text += f"You used <b>{total_n_used_tokens}</b> tokens\n\n"
-    text += details_text
+async def pay_handle(update: Update, context: CallbackContext):
+    await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
+    user_id = update.callback_query.from_user.id
 
-    await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    query = update.callback_query
+    await query.answer()
+
+    current_model = db.get_user_attribute(user_id, "current_model")
+    n_used_tokens = db.get_user_attribute(user_id, "n_used_tokens")
+    n_remaining_tokens = n_used_tokens[current_model]["n_remaining_tokens"]
+
+    pay_sum = int(query.data.split("|")[1])
+
+    # tokens_for_pay = int(pay_sum / (config.models["info"][current_model]["price_per_1000_output_tokens"])) * 20
+
+    tokens_for_sum = config.config_yaml[f"tokens_for_{pay_sum}_{current_model}"]
+
+    logger.info(f"Tokens for pay: {tokens_for_sum}")
+
+    # tokens_limit_for_buying: int = config.tokens_limit_for_buying
+
+    # if n_remaining_tokens + tokens_for_sum > tokens_limit_for_buying:
+    #     # await update.message.reply_text()
+    #     await update.callback_query.message.reply_text("Слишком много токенов", parse_mode=ParseMode.HTML)
+    #     return
+
+    order_id = db.add_new_order(user_id)
+    url = get_payment_url(order_id, pay_sum)
+    inlinekeyboard = get_buy_keyboard(url)
+
+    await update.callback_query.message.reply_text("Нажмите кнопку, чтобы перейти к оплате", reply_markup=inlinekeyboard, parse_mode=ParseMode.HTML)
 
 
 async def edited_message_handle(update: Update, context: CallbackContext):
     if update.edited_message.chat.type == "private":
-        text = "🥲 Unfortunately, message <b>editing</b> is not supported"
+        text = "🥲 К сожалению, редактирование <b>сообщения</b> не поддерживается"
         await update.edited_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
@@ -651,12 +721,12 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
 
 async def post_init(application: Application):
     await application.bot.set_my_commands([
-        BotCommand("/new", "Start new dialog"),
-        BotCommand("/mode", "Select chat mode"),
-        BotCommand("/retry", "Re-generate response for previous query"),
-        BotCommand("/balance", "Show balance"),
-        BotCommand("/settings", "Show settings"),
-        BotCommand("/help", "Show help message"),
+        BotCommand("/new", "Начать новый диалог"),
+        BotCommand("/mode", "Выбрать режим чата"),
+        BotCommand("/retry", "Повторно сгенерировать ответ на предыдущий запрос"),
+        BotCommand("/balance", "Показать баланс"),
+        BotCommand("/settings", "Показать настройки"),
+        BotCommand("/help", "Показать справочное сообщение"),
     ])
 
 def run_bot() -> None:
@@ -689,7 +759,7 @@ def run_bot() -> None:
     application.add_handler(CommandHandler("new", new_dialog_handle, filters=user_filter))
     application.add_handler(CommandHandler("cancel", cancel_handle, filters=user_filter))
 
-    application.add_handler(MessageHandler(filters.VOICE & user_filter, voice_message_handle))
+    # application.add_handler(MessageHandler(filters.VOICE & user_filter, voice_message_handle))
 
     application.add_handler(CommandHandler("mode", show_chat_modes_handle, filters=user_filter))
     application.add_handler(CallbackQueryHandler(show_chat_modes_callback_handle, pattern="^show_chat_modes"))
@@ -700,10 +770,19 @@ def run_bot() -> None:
 
     application.add_handler(CommandHandler("balance", show_balance_handle, filters=user_filter))
 
+    application.add_handler(CallbackQueryHandler(pay_handle, pattern="^pay"))
+
     application.add_error_handler(error_handle)
 
     # start the bot
-    application.run_polling()
+    # application.run_polling()
+    # application.bot.set_webhook(url=url)
+
+    application.run_webhook(
+        listen='0.0.0.0',
+        port=8443,
+        webhook_url=f"{config.webhook_url}",
+        drop_pending_updates=True)
 
 
 if __name__ == "__main__":
