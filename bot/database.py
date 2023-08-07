@@ -48,7 +48,13 @@ class Database:
             "current_chat_mode": "assistant",
             "current_model": config.models["available_text_models"][0],
 
-            "n_used_tokens": {},
+            "n_used_tokens": {
+                config.models["available_text_models"][0]: {
+                    "n_input_tokens": 0,
+                    "n_output_tokens": 0,
+                    "n_remaining_tokens": config.tokens_limit_for_new_user
+                }
+            },
 
             # "n_remaining_tokens": 5000,
 
@@ -163,3 +169,10 @@ class Database:
             {"_id": dialog_id, "user_id": user_id},
             {"$set": {"messages": dialog_messages}}
         )
+
+    # --- Admin part
+    def get_user(self, user_id: int):
+        self.check_if_user_exists(user_id, raise_exception=True)
+        user_dict = self.user_collection.find_one({"_id": user_id})
+
+        return user_dict
