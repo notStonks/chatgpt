@@ -81,9 +81,8 @@ async def register_user_if_not_exists(update: Update, context: CallbackContext, 
             update.message.chat_id,
             username=user.username,
             first_name=user.first_name,
-            last_name= user.last_name
+            last_name=user.last_name
         )
-        db.set_user_attribute(user.id, "n_remaining_tokens", config.tokens_limit_for_new_user)
         db.start_new_dialog(user.id)
 
     if db.get_user_attribute(user.id, "current_dialog_id") is None:
@@ -116,22 +115,22 @@ async def register_user_if_not_exists(update: Update, context: CallbackContext, 
 
 
 async def is_bot_mentioned(update: Update, context: CallbackContext):
-     try:
-         message = update.message
+    try:
+        message = update.message
 
-         if message.chat.type == "private":
-             return True
+        if message.chat.type == "private":
+            return True
 
-         if message.text is not None and ("@" + context.bot.username) in message.text:
-             return True
+        if message.text is not None and ("@" + context.bot.username) in message.text:
+            return True
 
-         if message.reply_to_message is not None:
-             if message.reply_to_message.from_user.id == context.bot.id:
-                 return True
-     except:
-         return True
-     else:
-         return False
+        if message.reply_to_message is not None:
+            if message.reply_to_message.from_user.id == context.bot.id:
+                return True
+    except:
+        return True
+    else:
+        return False
 
 
 async def start_handle(update: Update, context: CallbackContext):
@@ -141,7 +140,7 @@ async def start_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     db.start_new_dialog(user_id)
 
-    reply_text = "Привет! Я <b>бот ChatGPT</b>, реализованный с помощью Openal API 🤖\n\n"
+    reply_text = "Привет! Я <b>бот ChatGPT</b>, реализованный с помощью Openai API 🤖\n\n"
     reply_text += HELP_MESSAGE
 
     await update.message.reply_text(reply_text, parse_mode=ParseMode.HTML)
@@ -156,14 +155,14 @@ async def help_handle(update: Update, context: CallbackContext):
 
 
 async def help_group_chat_handle(update: Update, context: CallbackContext):
-     await register_user_if_not_exists(update, context, update.message.from_user)
-     user_id = update.message.from_user.id
-     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    await register_user_if_not_exists(update, context, update.message.from_user)
+    user_id = update.message.from_user.id
+    db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-     text = HELP_GROUP_CHAT_MESSAGE.format(bot_username="@" + context.bot.username)
+    text = HELP_GROUP_CHAT_MESSAGE.format(bot_username="@" + context.bot.username)
 
-     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-     await update.message.reply_video(config.help_group_chat_video_path)
+    await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    await update.message.reply_video(config.help_group_chat_video_path)
 
 
 async def retry_handle(update: Update, context: CallbackContext):
@@ -175,7 +174,7 @@ async def retry_handle(update: Update, context: CallbackContext):
 
     dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
     if len(dialog_messages) == 0:
-        await update.message.reply_text("No message to retry 🤷‍♂️")
+        await update.message.reply_text("Нет сообщения для повторного ответа 🤷‍♂️")
         return
 
     last_dialog_message = dialog_messages.pop()
@@ -213,20 +212,26 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     async def message_handle_fn():
         # new dialog timeout
         if use_new_dialog_timeout:
-            if (datetime.now() - db.get_user_attribute(user_id, "last_interaction")).seconds > config.new_dialog_timeout and len(db.get_dialog_messages(user_id)) > 0:
+            if (datetime.now() - db.get_user_attribute(user_id,
+                                                       "last_interaction")).seconds > config.new_dialog_timeout and len(
+                    db.get_dialog_messages(user_id)) > 0:
                 db.start_new_dialog(user_id)
-                await update.message.reply_text(f"Запуск нового диалогового окна из-за тайм-аута (<b>{config.chat_modes[chat_mode]['name']}</b> режим) ✅", parse_mode=ParseMode.HTML)
+                await update.message.reply_text(
+                    f"Запуск нового диалога из-за тайм-аута (<b>{config.chat_modes[chat_mode]['name']}</b> режим) ✅",
+                    parse_mode=ParseMode.HTML)
         db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-        n_remaining_tokens = db.get_user_attribute(user_id, "n_remaining_tokens")
+        current_model = db.get_user_attribute(user_id, "current_model")
+        n_used_tokens = db.get_user_attribute(user_id, "n_used_tokens")
+        n_remaining_tokens = n_used_tokens[current_model]["n_remaining_tokens"]
 
         if n_remaining_tokens <= 0:
-            await update.message.reply_text("К сожалению закончились токены. Пополните баланс для продолжения общения...")
+            await update.message.reply_text(
+                "К сожалению закончились токены. Пополните баланс для продолжения общения...")
             return
 
         # in case of CancelledError
         n_input_tokens, n_output_tokens = 0, 0
-        current_model = db.get_user_attribute(user_id, "current_model")
 
         try:
             # send placeholder message to user
@@ -236,8 +241,10 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             await update.message.chat.send_action(action="typing")
 
             if _message is None or len(_message) == 0:
-                 await update.message.reply_text("🥲 Вы отправили <b>пустое сообщение</b>. Пожалуйста, попробуйте еще раз!", parse_mode=ParseMode.HTML)
-                 return
+                await update.message.reply_text(
+                    "🥲 Вы отправили <b>пустое сообщение</b>. Пожалуйста, попробуйте еще раз!",
+                    parse_mode=ParseMode.HTML)
+                return
 
             dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
             parse_mode = {
@@ -247,9 +254,11 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
 
             chatgpt_instance = openai_utils.ChatGPT(model=current_model)
             if config.enable_message_streaming:
-                gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages, chat_mode=chat_mode)
+                gen = chatgpt_instance.send_message_stream(_message, dialog_messages=dialog_messages,
+                                                           chat_mode=chat_mode)
             else:
-                answer, (n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
+                answer, (
+                n_input_tokens, n_output_tokens), n_first_dialog_messages_removed = await chatgpt_instance.send_message(
                     _message,
                     dialog_messages=dialog_messages,
                     chat_mode=chat_mode
@@ -271,12 +280,15 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                     continue
 
                 try:
-                    await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id, parse_mode=parse_mode)
+                    await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id,
+                                                        message_id=placeholder_message.message_id,
+                                                        parse_mode=parse_mode)
                 except telegram.error.BadRequest as e:
                     if str(e).startswith("Message is not modified"):
                         continue
                     else:
-                        await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id, message_id=placeholder_message.message_id)
+                        await context.bot.edit_message_text(answer, chat_id=placeholder_message.chat_id,
+                                                            message_id=placeholder_message.message_id)
 
                 await asyncio.sleep(0.01)  # wait a bit to avoid flooding
 
@@ -308,7 +320,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             if n_first_dialog_messages_removed == 1:
                 text = "✍️ <i>Примечание:</i> Ваш текущий диалог слишком длинный, поэтому ваше <b>первое сообщение</b> было удалено из контекста.\n Отправить /новая команда для запуска нового диалога"
             else:
-                text = f"✍️ <i>Примечание:</i> Ваш текущий диалог слишком длинный, поэтому <b>{n_first_dialog_messages_removed} первые сообщения</b> были удалены из контекста.\n Отправить /новая команда для запуска нового диалога"
+                text = f"✍️ <i>Примечание:</i> Ваш текущий диалог слишком длинный, поэтому <b>{n_first_dialog_messages_removed} первых сообщения</b> были удалены из контекста.\n Отправить /new для запуска нового диалога"
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
     async with user_semaphores[user_id]:
@@ -368,13 +380,14 @@ async def voice_message_handle(update: Update, context: CallbackContext):
             transcribed_text = await openai_utils.transcribe_audio(f)
 
             if transcribed_text is None:
-                 transcribed_text = ""
+                transcribed_text = ""
 
     text = f"🎤: <i>{transcribed_text}</i>"
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
     # update n_transcribed_seconds
-    db.set_user_attribute(user_id, "n_transcribed_seconds", voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
+    db.set_user_attribute(user_id, "n_transcribed_seconds",
+                          voice.duration + db.get_user_attribute(user_id, "n_transcribed_seconds"))
 
     await message_handle(update, context, message=transcribed_text)
 
@@ -401,7 +414,8 @@ async def generate_image_handle(update: Update, context: CallbackContext, messag
             raise
 
     # token usage
-    db.set_user_attribute(user_id, "n_generated_images", config.return_n_generated_images + db.get_user_attribute(user_id, "n_generated_images"))
+    db.set_user_attribute(user_id, "n_generated_images",
+                          config.return_n_generated_images + db.get_user_attribute(user_id, "n_generated_images"))
 
     for i, image_url in enumerate(image_urls):
         await update.message.chat.send_action(action="upload_photo")
@@ -484,25 +498,25 @@ async def show_chat_modes_handle(update: Update, context: CallbackContext):
 
 
 async def show_chat_modes_callback_handle(update: Update, context: CallbackContext):
-     await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
-     if await is_previous_message_not_answered_yet(update.callback_query, context): return
+    await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
+    if await is_previous_message_not_answered_yet(update.callback_query, context): return
 
-     user_id = update.callback_query.from_user.id
-     db.set_user_attribute(user_id, "last_interaction", datetime.now())
+    user_id = update.callback_query.from_user.id
+    db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
-     query = update.callback_query
-     await query.answer()
+    query = update.callback_query
+    await query.answer()
 
-     page_index = int(query.data.split("|")[1])
-     if page_index < 0:
-         return
+    page_index = int(query.data.split("|")[1])
+    if page_index < 0:
+        return
 
-     text, reply_markup = get_chat_mode_menu(page_index)
-     try:
-         await query.edit_message_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
-     except telegram.error.BadRequest as e:
-         if str(e).startswith("Message is not modified"):
-             pass
+    text, reply_markup = get_chat_mode_menu(page_index)
+    try:
+        await query.edit_message_text(text, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+    except telegram.error.BadRequest as e:
+        if str(e).startswith("Message is not modified"):
+            pass
 
 
 async def set_chat_mode_handle(update: Update, context: CallbackContext):
@@ -587,7 +601,8 @@ def get_balance_menu(user_id: int, current_model: str):
     buttons = []
     for pay_sum in pay_sums:
         tokens_for_sum = config.config_yaml[f"tokens_for_{pay_sum}_{current_model}"]
-        buttons.append(InlineKeyboardButton(text=f"Купить {tokens_for_sum} ток.\nза {pay_sum} руб.", callback_data=f"pay|{pay_sum}"))
+        buttons.append(InlineKeyboardButton(text=f"Купить {tokens_for_sum} ток. за {pay_sum} руб.",
+                                            callback_data=f"pay|{pay_sum}"))
     inlinekeyboard = InlineKeyboardMarkup([[button] for button in buttons])
 
     return inlinekeyboard
@@ -605,12 +620,13 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     total_n_used_tokens = 0
 
     n_used_tokens_dict = db.get_user_attribute(user_id, "n_used_tokens")
-    n_generated_images = db.get_user_attribute(user_id, "n_generated_images")
-    n_transcribed_seconds = db.get_user_attribute(user_id, "n_transcribed_seconds")
+    # n_generated_images = db.get_user_attribute(user_id, "n_generated_images")
+    # n_transcribed_seconds = db.get_user_attribute(user_id, "n_transcribed_seconds")
 
-    details_text = "🏷️ Details:\n"
+    details_text = "🏷️ Подробности:\n"
     for model_key in sorted(n_used_tokens_dict.keys()):
-        n_input_tokens, n_output_tokens, n_remaining_tokens = n_used_tokens_dict[model_key]["n_input_tokens"], n_used_tokens_dict[model_key]["n_output_tokens"], \
+        n_input_tokens, n_output_tokens, n_remaining_tokens = n_used_tokens_dict[model_key]["n_input_tokens"], \
+        n_used_tokens_dict[model_key]["n_output_tokens"], \
             n_used_tokens_dict[model_key]["n_remaining_tokens"]
         total_n_used_tokens += n_input_tokens + n_output_tokens
 
@@ -626,18 +642,19 @@ async def show_balance_handle(update: Update, context: CallbackContext):
         details_text += f"  Осталось токенов: {n_remaining_tokens}\n"
 
     # image generation
-    image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
-    if n_generated_images != 0:
-        # details_text += f"- DALL·E 2 (image generation): <b>{image_generation_n_spent_dollars:.03f}$</b> / <b>{n_generated_images} generated images</b>\n"
-        details_text += f"- DALL·E 2 (image generation): <b>{n_generated_images} generated images</b>\n"
+    # image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
+    # if n_generated_images != 0:
+    #     # details_text += f"- DALL·E 2 (image generation): <b>{image_generation_n_spent_dollars:.03f}$</b> / <b>{n_generated_images} generated images</b>\n"
+    #     details_text += f"- DALL·E 2 (image generation): <b>{n_generated_images} generated images</b>\n"
 
     # total_n_spent_dollars += image_generation_n_spent_dollars
 
     # voice recognition
-    voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (n_transcribed_seconds / 60)
-    if n_transcribed_seconds != 0:
-        # details_text += f"- Whisper (voice recognition): <b>{voice_recognition_n_spent_dollars:.03f}$</b> / <b>{n_transcribed_seconds:.01f} seconds</b>\n"
-        details_text += f"- Whisper (voice recognition): <b>{n_transcribed_seconds:.01f} seconds</b>\n"
+    # voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (
+    #             n_transcribed_seconds / 60)
+    # if n_transcribed_seconds != 0:
+    #     # details_text += f"- Whisper (voice recognition): <b>{voice_recognition_n_spent_dollars:.03f}$</b> / <b>{n_transcribed_seconds:.01f} seconds</b>\n"
+    #     details_text += f"- Whisper (voice recognition): <b>{n_transcribed_seconds:.01f} seconds</b>\n"
 
     # total_n_spent_dollars += voice_recognition_n_spent_dollars
 
@@ -663,8 +680,8 @@ async def pay_handle(update: Update, context: CallbackContext):
     await query.answer()
 
     current_model = db.get_user_attribute(user_id, "current_model")
-    n_used_tokens = db.get_user_attribute(user_id, "n_used_tokens")
-    n_remaining_tokens = n_used_tokens[current_model]["n_remaining_tokens"]
+    # n_used_tokens = db.get_user_attribute(user_id, "n_used_tokens")
+    # n_remaining_tokens = n_used_tokens[current_model]["n_remaining_tokens"]
 
     pay_sum = int(query.data.split("|")[1])
 
@@ -685,7 +702,8 @@ async def pay_handle(update: Update, context: CallbackContext):
     url = get_payment_url(order_id, pay_sum)
     inlinekeyboard = get_buy_keyboard(url)
 
-    await update.callback_query.message.reply_text("Нажмите кнопку, чтобы перейти к оплате", reply_markup=inlinekeyboard, parse_mode=ParseMode.HTML)
+    await update.callback_query.message.reply_text("Нажмите кнопку, чтобы перейти к оплате",
+                                                   reply_markup=inlinekeyboard, parse_mode=ParseMode.HTML)
 
 
 async def edited_message_handle(update: Update, context: CallbackContext):
@@ -699,14 +717,14 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
 
     try:
         # collect error message
-        tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
-        tb_string = "".join(tb_list)
-        update_str = update.to_dict() if isinstance(update, Update) else str(update)
+        # tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
+        # tb_string = "".join(tb_list)
+        # update_str = update.to_dict() if isinstance(update, Update) else str(update)
         message = (
             f"An exception was raised while handling an update\n"
-            f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
-            "</pre>\n\n"
-            f"<pre>{html.escape(tb_string)}</pre>"
+            # f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
+            # "</pre>\n\n"
+            # f"<pre>{html.escape(tb_string)}</pre>"
         )
 
         # split text into multiple messages due to 4096 character limit
@@ -719,6 +737,7 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
     except:
         await context.bot.send_message(update.effective_chat.id, "Some error in error handler")
 
+
 async def post_init(application: Application):
     await application.bot.set_my_commands([
         BotCommand("/new", "Начать новый диалог"),
@@ -728,6 +747,7 @@ async def post_init(application: Application):
         BotCommand("/settings", "Показать настройки"),
         BotCommand("/help", "Показать справочное сообщение"),
     ])
+
 
 def run_bot() -> None:
     application = (
@@ -748,7 +768,8 @@ def run_bot() -> None:
         any_ids = [x for x in config.allowed_telegram_usernames if isinstance(x, int)]
         user_ids = [x for x in any_ids if x > 0]
         group_ids = [x for x in any_ids if x < 0]
-        user_filter = filters.User(username=usernames) | filters.User(user_id=user_ids) | filters.Chat(chat_id=group_ids)
+        user_filter = filters.User(username=usernames) | filters.User(user_id=user_ids) | filters.Chat(
+            chat_id=group_ids)
 
     application.add_handler(CommandHandler("start", start_handle, filters=user_filter))
     application.add_handler(CommandHandler("help", help_handle, filters=user_filter))
@@ -775,14 +796,14 @@ def run_bot() -> None:
     application.add_error_handler(error_handle)
 
     # start the bot
-    # application.run_polling()
+    application.run_polling()
     # application.bot.set_webhook(url=url)
 
-    application.run_webhook(
-        listen='0.0.0.0',
-        port=8443,
-        webhook_url=f"{config.webhook_url}",
-        drop_pending_updates=True)
+    # application.run_webhook(
+    #     listen='0.0.0.0',
+    #     port=8443,
+    #     webhook_url=f"{config.webhook_url}",
+    #     drop_pending_updates=True)
 
 
 if __name__ == "__main__":

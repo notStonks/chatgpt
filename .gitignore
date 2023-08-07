@@ -135,4 +135,4 @@ config/models_en.yml
 
 docker-compose.dev.yml
 
-mongodb/
+mongodb/!/config/config.yml
