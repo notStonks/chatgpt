@@ -76,12 +76,17 @@ def split_text_into_chunks(text, chunk_size):
 
 async def register_user_if_not_exists(update: Update, context: CallbackContext, user: User):
     if not db.check_if_user_exists(user.id):
+        try:
+            phone = update.message.contact.phone_number
+        except Exception:
+            phone = ""
         db.add_new_user(
             user.id,
             update.message.chat_id,
             username=user.username,
             first_name=user.first_name,
-            last_name=user.last_name
+            last_name=user.last_name,
+            phone=phone
         )
         db.start_new_dialog(user.id)
 

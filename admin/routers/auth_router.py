@@ -25,7 +25,9 @@ def login_for_access_token(
     response.set_cookie(
         key=settings.COOKIE_NAME,
         value=f"Bearer {access_token}",
-        httponly=True
+        samesite="strict",
+        secure=False
+        # httponly=True
     )
     return {settings.COOKIE_NAME: access_token, "token_type": "bearer"}
 
@@ -50,18 +52,18 @@ def index(request: Request):
 # admin Page
 # --------------------------------------------------------------------------
 # A admin page that only log in users can access.
-@router.get("/admin", response_class=HTMLResponse)
-def index(request: Request):
-    try:
-        user: User = get_current_user_from_cookie(request)
-    except Exception as e:
-        return RedirectResponse("/auth/login")
-    context = {
-        "user": user,
-        "request": request
-    }
-
-    return templates.TemplateResponse("private.html", context)
+# @router.get("/admin", response_class=HTMLResponse)
+# def index(request: Request):
+#     try:
+#         user: User = get_current_user_from_cookie(request)
+#     except Exception as e:
+#         return RedirectResponse("/auth/login")
+#     context = {
+#         "user": user,
+#         "request": request
+#     }
+#
+#     return templates.TemplateResponse("admin.html", context)
 
 
 # --------------------------------------------------------------------------

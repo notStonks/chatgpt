@@ -32,6 +32,7 @@ class Database:
             username: str = "",
             first_name: str = "",
             last_name: str = "",
+            phone: str = "",
     ):
         user_dict = {
             "_id": user_id,
@@ -40,6 +41,7 @@ class Database:
             "username": username,
             "first_name": first_name,
             "last_name": last_name,
+            "phone": phone,
 
             "last_interaction": datetime.now(),
             "first_seen": datetime.now(),
@@ -56,10 +58,16 @@ class Database:
                 }
             },
 
+            "n_bought_tokens": {
+                config.models["available_text_models"][0]: 0
+            },
+
             # "n_remaining_tokens": 5000,
 
             "n_generated_images": 0,
-            "n_transcribed_seconds": 0.0  # voice message transcription
+            "n_transcribed_seconds": 0.0, # voice message transcription
+
+            "payment_date": None
         }
 
         if not self.check_if_user_exists(user_id):
@@ -96,7 +104,7 @@ class Database:
         order_dict = {
             "_id": id,
             "user_id": user_id,
-            "order_id": order_id
+            "order_id": order_id,
         }
 
         self.order_collection.insert_one(order_dict)
@@ -149,6 +157,17 @@ class Database:
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
         # self.set_user_attribute(user_id, "n_remaining_tokens", n_remaining_tokens)
+
+
+    def update_n_bought_tokens(self, user_id: int, model: str, quantity: int):
+        n_bought_tokens_dict = self.get_user_attribute(user_id, "n_bought_tokens")
+
+        if model in n_bought_tokens_dict:
+            n_bought_tokens_dict[model] += quantity
+        else:
+            n_bought_tokens_dict[model] = quantity
+
+        self.set_user_attribute(user_id, "n_used_tokens", n_bought_tokens_dict)
 
     def get_dialog_messages(self, user_id: int, dialog_id: Optional[str] = None):
         self.check_if_user_exists(user_id, raise_exception=True)

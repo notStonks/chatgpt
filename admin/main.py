@@ -1,11 +1,15 @@
+import sys
+import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from routers.auth_router import router as auth_router
+from routers import auth_router, data_router
 
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Create a "database" to hold your data. This is just for example purposes. In
 # a real world scenario you would likely connect to a SQL or NoSQL database.
 # class DataBase(BaseModel):
@@ -21,11 +25,33 @@ from routers.auth_router import router as auth_router
 
 
 app = FastAPI()
+# origins = [
+#     "http://127.0.0.1:8080",
+#     "http://localhost:8080",
+#     "http://172.18.0.1"
+#     "https://172.18.0.1"
+#
+# ]
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"]
+# )
 app.mount(
     "/static",
     StaticFiles(directory=Path(__file__).parent.absolute() / "static"),
     name="static",
 )
 
-app.include_router(auth_router)
+
+# @app.get("/i")
+# def read_root(request: Request):
+#     client_host = request.client.host
+#     return {"client_host": client_host}
+
+
+app.include_router(auth_router.router)
+app.include_router(data_router.router)
 

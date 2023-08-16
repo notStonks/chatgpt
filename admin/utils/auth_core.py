@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 from typing import Dict, Optional
 
 
@@ -14,6 +15,8 @@ import config
 from .auth_form import User
 from .settings import settings
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
     """
@@ -122,6 +125,8 @@ def get_current_user_from_cookie(request: Request) -> User:
     for views that should work for both logged in, and not logged in users.
     """
     token = request.cookies.get(settings.COOKIE_NAME)
+    logger.info(token)
+    logger.info(type(token))
     user = decode_token(token)
     return user
 
