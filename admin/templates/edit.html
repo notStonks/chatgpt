@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/edit.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Чат ГПТ</h1>
+    </header>
+    <aside class="left">
+      <ul>
+
+        <li><a href="/admin">Главная</a></li>
+        <li><a  href="#back">Назад</a></li>
+        <li><a href="/auth/logout">Выйти</a></li>
+
+      </ul>
+    </aside>
+    <main class="content">
+        <form class="record" action="/admin/change/{{ user_dict._id }}" method="post">
+        <div class="preference">
+            <label for="">Telegram id</label>
+            <input type="text" name="" id="" value="{{ user_dict._id }}" readonly/>
+        </div>
+        <div class="preference">
+            <label for="">Username</label>
+            <input type="text" name="" id="" value="{{ user_dict.username }}" readonly/>
+        </div>
+        <div class="preference">
+            <label for="">Имя</label>
+            <input type="text" name="" id="" value="{{ user_dict.first_name }}" readonly/>
+        </div>
+        <div class="preference">
+            <label for="">Фамилия</label>
+            <input type="text" name="" id="" value="{{ user_dict.last_name }}" readonly/>
+        </div>
+            <div class="preference">
+            <label for="">Осталось токенов</label>
+                    <div class="tokens">
+<!--            <input type="text" name="" id="" value="{{ user_dict.n_used_tokens }}" readonly/>-->
+                {% for key in user_dict.n_used_tokens.keys() %}
+                        <div class="inner-tokens">
+                            <label for="">{{ key }}</label>
+                            <input type="text" name="{{ key|replace('.', '')|replace('-', '') }}" value="{{ user_dict.n_used_tokens[key]['n_remaining_tokens'] }}"/> <br>
+                        </div>
+                {% endfor %}
+                    </div>
+            </div>
+            <div class="preference">
+            <label for="">Всего затрачено токенов</label>
+                    <div class="tokens">
+<!--            <input type="text" name="" id="" value="{{ user_dict.n_used_tokens }}" readonly/>-->
+                        {% for key in user_dict.n_used_tokens.keys() %}
+                            <div class="inner-tokens">
+                                <label for="">{{ key }}</label>
+                                <input type="text" name="" id="" value="{{ user_dict.n_used_tokens[key]['used_tokens'] }}" readonly/> <br>
+                            </div>
+                        {% endfor %}
+                     </div>
+            </div>
+        <div class="preference">
+            <label for="">Всего куплено токенов</label>
+            {% if user_dict.n_bought_tokens %}
+                {% for key in user_dict.n_bought_tokens.keys() %}
+                    <input type="text" name="" id="" value="{{ user_dict.n_bought_tokens[key] }}" readonly/>
+                {% endfor %}
+            {% else %}
+                <input type="text" name="" id="" value="" readonly/>
+            {% endif %}
+        </div>
+            <div class="preference">
+            <label for="">Дата последнего платежа</label>
+            <input type="text" name="" id="" value="{{ user_dict.payment_date }}" readonly/>
+            </div>
+        <div class="preference">
+            <label for="">Номер телефона</label>
+            <input type="text" name="" id="" value="{{ user_dict.phone }}" readonly/>
+        </div>
+            <div class="preference">
+            <label for="">Бан</label>
+            <input type="checkbox" name="ban" id="" value='True' {{ 'checked' if  user_dict.ban  }}/>
+            </div>
+            <br>
+            <br>
+        <input class="spinner button" type="submit" value="Сохранить">
+            <br>
+            <br>
+        </form>
+      <hr><br>
+    </main>
+
+  </div>
+<!--  <div class="footer"><footer>adadasda</footer></div>-->
+
+</body>
+
+
+</html>

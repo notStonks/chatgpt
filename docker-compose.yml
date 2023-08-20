@@ -14,7 +14,7 @@ services:
 
   chatgpt_telegram_bot:
     container_name: chatgpt_telegram_bot
-    command: python3 bot/bot.py
+    command: python3 bot/main.py
     restart: on-failure
     build:
       context: "."
@@ -45,13 +45,14 @@ services:
 
   admin:
     container_name: admin
-#    command: gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080
     command: bash -c "cd admin/ && uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
+#    command: bash -c "cd admin/ && gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080"
+#    command: bash -c "cd  djangoadmin/botadmin/ && python manage.py runserver 0.0.0.0:8080"
     restart: always
     build:
       dockerfile: Dockerfile
     volumes:
-      - ./:/code/
+      - ./:/code
     ports:
       - 8080:8080
     networks:
@@ -66,7 +67,7 @@ services:
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongo
       - ME_CONFIG_MONGODB_PORT=${MONGODB_PORT:-27017}
-      - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
       - ME_CONFIG_MONGODB_AUTH_DATABASE=chatgpt_telegram_bot
       - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USERNAME:-username}
       - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD:-password}

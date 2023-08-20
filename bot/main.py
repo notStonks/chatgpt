@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import asyncio
 import traceback
@@ -35,7 +36,7 @@ import database
 import openai_utils
 from utils import get_buy_keyboard, get_payment_url
 
-from tinkoff import TinkoffPayment
+
 
 # setup
 db = database.Database()
@@ -138,9 +139,20 @@ async def is_bot_mentioned(update: Update, context: CallbackContext):
         return False
 
 
+async def ban_status_check(user_id: int, update: Update):
+    if db.get_user_attribute(user_id, "ban"):
+        await update.message.reply_text(
+            f"К сожалению вы не можете общаться с ботом",
+            parse_mode=ParseMode.HTML)
+        return True
+
+
 async def start_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
 
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     db.start_new_dialog(user_id)
@@ -155,6 +167,10 @@ async def start_handle(update: Update, context: CallbackContext):
 async def help_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
     await update.message.reply_text(HELP_MESSAGE, parse_mode=ParseMode.HTML)
 
@@ -162,6 +178,10 @@ async def help_handle(update: Update, context: CallbackContext):
 async def help_group_chat_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     text = HELP_GROUP_CHAT_MESSAGE.format(bot_username="@" + context.bot.username)
@@ -175,6 +195,10 @@ async def retry_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
@@ -208,6 +232,10 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
 
     if chat_mode == "artist":
@@ -432,6 +460,10 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     db.start_new_dialog(user_id)
@@ -445,6 +477,10 @@ async def cancel_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     if user_id in user_tasks:
@@ -496,6 +532,10 @@ async def show_chat_modes_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     text, reply_markup = get_chat_mode_menu(0)
@@ -507,6 +547,10 @@ async def show_chat_modes_callback_handle(update: Update, context: CallbackConte
     if await is_previous_message_not_answered_yet(update.callback_query, context): return
 
     user_id = update.callback_query.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     query = update.callback_query
@@ -527,6 +571,9 @@ async def show_chat_modes_callback_handle(update: Update, context: CallbackConte
 async def set_chat_mode_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
     user_id = update.callback_query.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
 
     query = update.callback_query
     await query.answer()
@@ -574,6 +621,10 @@ async def settings_handle(update: Update, context: CallbackContext):
     if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     text, reply_markup = get_settings_menu(user_id)
@@ -583,6 +634,9 @@ async def settings_handle(update: Update, context: CallbackContext):
 async def set_settings_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
     user_id = update.callback_query.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
 
     query = update.callback_query
     await query.answer()
@@ -617,6 +671,10 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
 
     user_id = update.message.from_user.id
+
+    if await ban_status_check(user_id, update):
+        return
+
     current_model = db.get_user_attribute(user_id, "current_model")
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
@@ -681,17 +739,15 @@ async def pay_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update.callback_query, context, update.callback_query.from_user)
     user_id = update.callback_query.from_user.id
 
+    if await ban_status_check(user_id, update.callback_query):
+        return
+
     query = update.callback_query
     await query.answer()
 
     current_model = db.get_user_attribute(user_id, "current_model")
-    # n_used_tokens = db.get_user_attribute(user_id, "n_used_tokens")
-    # n_remaining_tokens = n_used_tokens[current_model]["n_remaining_tokens"]
 
     pay_sum = int(query.data.split("|")[1])
-
-    # tokens_for_pay = int(pay_sum / (config.models["info"][current_model]["price_per_1000_output_tokens"])) * 20
-
     tokens_for_sum = config.config_yaml[f"tokens_for_{pay_sum}_{current_model}"]
 
     logger.info(f"Tokens for pay: {tokens_for_sum}")

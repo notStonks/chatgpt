@@ -67,7 +67,9 @@ class Database:
             "n_generated_images": 0,
             "n_transcribed_seconds": 0.0, # voice message transcription
 
-            "payment_date": None
+            "payment_date": None,
+
+            "ban": False
         }
 
         if not self.check_if_user_exists(user_id):
@@ -75,19 +77,21 @@ class Database:
 
     def start_new_dialog(self, user_id: int):
         self.check_if_user_exists(user_id, raise_exception=True)
-
+        model = self.get_user_attribute(user_id, "current_model")
         dialog_id = str(uuid.uuid4())
         dialog_dict = {
             "_id": dialog_id,
             "user_id": user_id,
             "chat_mode": self.get_user_attribute(user_id, "current_chat_mode"),
             "start_time": datetime.now(),
-            "model": self.get_user_attribute(user_id, "current_model"),
+            "model": model,
             "messages": []
         }
 
         # add new dialog
         self.dialog_collection.insert_one(dialog_dict)
+
+        self.update_n_used_tokens(user_id, model, 0, 0)
 
         # update user's current dialog
         self.user_collection.update_one(
@@ -158,7 +162,6 @@ class Database:
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
         # self.set_user_attribute(user_id, "n_remaining_tokens", n_remaining_tokens)
 
-
     def update_n_bought_tokens(self, user_id: int, model: str, quantity: int):
         n_bought_tokens_dict = self.get_user_attribute(user_id, "n_bought_tokens")
 
@@ -195,3 +198,14 @@ class Database:
         user_dict = self.user_collection.find_one({"_id": user_id})
 
         return user_dict
+
+
+db = Database()
+db.add_new_user(35983521, 1231231798)
+db.add_new_user(35983522, 1231279887)
+db.add_new_user(35983523, 1231234654)
+db.add_new_user(35983524, 123123789)
+db.add_new_user(35983525, 12312346546)
+db.add_new_user(359835598, 1231254546)
+db.add_new_user(359835245, 1231231213)
+db.add_new_user(359835278, 12318987465)

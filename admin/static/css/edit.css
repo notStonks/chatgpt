@@ -34,19 +34,11 @@
       margin: 0;
       padding: 1em;
     }
-    .right {
-      float: right;
-      width: 300px;
-      margin: 0;
-      padding: 1em;
-    }
 
     .content {
-      width: 1200px;
+      width: 900px;
       margin-left: 190px;
       border-left: 1px solid #d4d4d4;
-      border-right: 1px solid #d4d4d4;
-
       padding: 1em;
       overflow: hidden;
     }
@@ -56,6 +48,16 @@
       justify-content: space-between;
       width: 60%;
       margin: 0.5rem;
+}
+    .tokens {
+      display: block;
+      justify-content: space-between;
+      float: right;
+}
+    .inner-tokens {
+      display: block;
+      justify-content: space-between;
+      float: right;
 }
 
     label{
@@ -86,7 +88,23 @@
       color: white;
     }
 
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+      margin: 30px 0;
+    }
 
+    td,
+    th {
+      border: 1px solid #dddddd;
+      padding: 8px;
+    }
+
+    tr:nth-child(1) {
+      background-color: #84e4e2;
+      color: white;
+    }
 
     tr td i.fas {
       display: block;
@@ -101,54 +119,3 @@
       text-align: center;
       flex-shrink: 0;
     }
-
-table{
-  width:100%;
-  table-layout: fixed;
-}
-.tbl-header{
-  background-color: #0046c7;
-  color: white;
-  height: 50px;
- }
-.tbl-content{
-  height:700px;
-  overflow-x:auto;
-  margin-top: 0px;
-  border-top: 1px solid rgba(255,255,255,0.3);
-  font-size: 30px;
-}
-th{
-  padding: 15px 15px;
-  text-align: left;
-  font-weight: 500;
-  font-size: 15px;
-  text-transform: uppercase;
-}
-td{
-  padding: 15px;
-  text-align: left;
-  vertical-align:middle;
-  font-weight: 300;
-  font-size: 15px;
-  border-bottom: solid 1px rgba(255,255,255,0.1);
-}
-
-
-/* demo styles */
-
-@import url(https://fonts.googleapis.com/css?family=Roboto:400,500,300,700);
-
-
-
-/* for custom scrollbar for webkit browser*/
-
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-}
-::-webkit-scrollbar-thumb {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-}

@@ -1,29 +1,47 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=10">
-    <title>Your title</title>    
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/index.css') }}">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/index.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
+
 <body>
-    <div class="content-wrapper">
-        <header class="header">
-            <p style="font-size: 30px; margin: 0; padding: 10px 1em;">Администрирование бота</p>
-        </header>
-    <section>
-     <h1>Пользователи бота</h1>
-      <div class="tbl-header">
+  <div class="container">
+    <header class="header">
+      <h1>Чат ГПТ</h1>
+    </header>
+    <aside class="left">
+      <ul>
+        <li><a href="/auth/logout">Выйти</a></li>
+      </ul>
+    </aside>
+    <aside class="right">
+      <h3>Статистика</h3>
+      <div>
+        <label for="">Пользователи:</label> {{ count }}
+      </div>
+<!--      <ul>-->
+<!--        <li><a href="#">Выйти</a></li>-->
+<!--      </ul>-->
+    </aside>
+    <main class="content">
+        <div class="tbl-header">
         <table cellpadding="0" cellspacing="0" border="0">
           <thead>
             <tr>
-              <th>Telegram</th>
+              <th>Telegram id</th>
               <th>Username</th>
               <th>Имя</th>
               <th>Фамилия</th>
-              <th>Дата последнего платежа</th>
-              <th>Всего куплено токенов</th>
-              <th>Номер телефона</th>
+              <th>Бан</th>
+<!--              <th>Дата последнего платежа</th>-->
+<!--              <th>Всего куплено токенов</th>-->
+<!--              <th>Номер телефона</th>-->
             </tr>
           </thead>
         </table>
@@ -33,13 +51,14 @@
           <tbody>
            {% for user in users %}
             <tr>
-              <td>{{ user._id }}</td>
+              <td><a href="/admin/{{ user._id }}">{{ user._id }}</a></td>
               <td>{{ user.username }}</td>
               <td>{{ user.first_name }}</td>
               <td>{{ user.last_name }}</td>
-              <td>{{ user.payment_date }}</td>
-              <td>{{ user.n_bought_tokens }}</td>
-              <td>{{ user.phone }}</td>
+              <td><input type="checkbox" name="ban" id="" value='True' onclick="return false;" {{ 'checked' if  user.ban  }} /></td>
+<!--              <td>{{ user.payment_date }}</td>-->
+<!--              <td>{{ user.n_bought_tokens }}</td>-->
+<!--              <td>{{ user.phone }}</td>-->
             </tr>
               {% endfor %}
 
@@ -47,54 +66,13 @@
           </tbody>
         </table>
       </div>
-    </section>
+      <hr><br>
+    </main>
 
+  </div>
+<!--  <div class="footer"><footer>adadasda</footer></div>-->
 
-
-<!--        <div class="container clearfix">-->
-<!--            <main class="content">-->
-<!--                <div>-->
-<!--                    <div>-->
-<!--                        <div class="container">-->
-
-<!--                            <div class="table">-->
-<!--                                <div class="table-header">-->
-<!--                                    <div class="header__item"><a id="id" class="filter__link" href="#">Telegram id</a></div>-->
-<!--                                    <div class="header__item"><a id="username" class="filter__link filter__link&#45;&#45;number" href="#">Username</a></div>-->
-<!--                                    <div class="header__item"><a id="first_name" class="filter__link filter__link&#45;&#45;number" href="#">Имя</a></div>-->
-<!--                                    <div class="header__item"><a id="last_name" class="filter__link filter__link&#45;&#45;number" href="#">Фамилия</a></div>-->
-<!--                                    <div class="header__item"><a id="payment_date" class="filter__link filter__link&#45;&#45;number" href="#">Дата последнего платежа</a></div>-->
-<!--                                    <div class="header__item"><a id="bought_tokens" class="filter__link filter__link&#45;&#45;number" href="#">Всего куплено токенов</a></div>-->
-<!--                                    <div class="header__item"><a id="phone" class="filter__link filter__link&#45;&#45;number" href="#">Номер телефона</a></div>-->
-<!--                                </div>-->
-
-<!--&lt;!&ndash;                                    <div class="table-row">&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <div class="table-data">Tom</div>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <div class="table-data">2</div>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <div class="table-data">0</div>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <div class="table-data">1</div>&ndash;&gt;-->
-<!--&lt;!&ndash;                                        <div class="table-data">5</div>&ndash;&gt;-->
-<!--                                <div class="table-content">-->
-<!--                                {% for user in users %}-->
-<!--                                    <div class="table-row">-->
-<!--                                            <div class="table-data">{{ user._id }}</div>-->
-<!--                                            <div class="table-data">{{ user.username }}</div>-->
-<!--                                            <div class="table-data">{{ user.first_name }}</div>-->
-<!--                                            <div class="table-data">{{ user.last_name }}</div>-->
-<!--                                            <div class="table-data">{{ user.payment_date }}</div>-->
-<!--                                            <div class="table-data">{{ user.n_bought_tokens }}</div>-->
-<!--                                            <div class="table-data">{{ user.phone }}</div>-->
-<!--                                    </div>-->
-<!--                                {% endfor %}-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </main>-->
-<!--        </div>-->
-<!--    </div>-->
 </body>
+
+
 </html>
