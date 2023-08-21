@@ -109,6 +109,7 @@ class Database:
             "_id": id,
             "user_id": user_id,
             "order_id": order_id,
+            "time": datetime.now()
         }
 
         self.order_collection.insert_one(order_dict)
@@ -198,14 +199,3 @@ class Database:
         user_dict = self.user_collection.find_one({"_id": user_id})
 
         return user_dict
-
-
-db = Database()
-db.add_new_user(35983521, 1231231798)
-db.add_new_user(35983522, 1231279887)
-db.add_new_user(35983523, 1231234654)
-db.add_new_user(35983524, 123123789)
-db.add_new_user(35983525, 12312346546)
-db.add_new_user(359835598, 1231254546)
-db.add_new_user(359835245, 1231231213)
-db.add_new_user(359835278, 12318987465)

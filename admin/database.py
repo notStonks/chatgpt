@@ -17,10 +17,14 @@ class Database:
         self.order_collection = self.db["order"]
 
     # --- Admin part
-    def get_users(self):
+    def get_users(self, page: int, limit: int):
         # self.check_if_user_exists(user_id, raise_exception=True)
-        user_dict = self.user_collection.find({},
-        {"_id": 1, "username": 1, "first_name": 1, "last_name": 1, "payment_date": 1, "n_bought_tokens": 1, "phone": 1, "ban": 1})
+        user_dict = (self.user_collection.
+                     find({},
+                          {"_id": 1, "username": 1,
+                           "first_name": 1, "last_name": 1,
+                           "payment_date": 1, "n_bought_tokens": 1,
+                           "phone": 1, "ban": 1}).skip((page - 1) * limit).limit(limit))
 
         return user_dict, self.user_collection.count()
 
