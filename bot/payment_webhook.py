@@ -39,7 +39,8 @@ async def _confirmed_payment(order_id: str, amount: int):
     и меняет статус в БД
     """
     try:
-        user_id = db.get_user_id(order_id)
+        user_id = db.get_order_attribute(order_id, "user_id")
+        db.set_order_attribute(order_id, "status", "CONFIRMED")
         chat_id = db.get_user_attribute(user_id, "chat_id")
         current_model = db.get_user_attribute(user_id, "current_model")
         amount = amount // 100
@@ -65,7 +66,8 @@ async def _rejected_payment(order_id: str, amount: str):
         payment_url = get_payment_url(order_id, amount)
         buy_keyboard = get_buy_keyboard(payment_url)
 
-        user_id = db.get_user_id(order_id)
+        user_id = db.get_order_attribute(order_id, "user_id")
+        db.set_order_attribute(order_id, "status", "REJECTED")
         chat_id = db.get_user_attribute(user_id, "chat_id")
 
         bot = telegram.Bot(config.telegram_token)

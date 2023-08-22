@@ -1,3 +1,4 @@
+
 from fastapi.templating import Jinja2Templates
 
 
@@ -11,3 +12,4 @@ class Settings:
 settings = Settings()
 
 templates = Jinja2Templates(directory="templates")
+

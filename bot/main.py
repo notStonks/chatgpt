@@ -759,7 +759,7 @@ async def pay_handle(update: Update, context: CallbackContext):
     #     await update.callback_query.message.reply_text("Слишком много токенов", parse_mode=ParseMode.HTML)
     #     return
 
-    order_id = db.add_new_order(user_id)
+    order_id = db.add_new_order(user_id, pay_sum)
     url = get_payment_url(order_id, pay_sum)
     inlinekeyboard = get_buy_keyboard(url)
 

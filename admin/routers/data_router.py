@@ -9,12 +9,45 @@ from utils.auth_core import (authenticate_user, create_access_token, get_current
 from utils.auth_form import User, LoginForm
 from utils.settings import settings, templates
 import database
+import config
 
 db = database.Database()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+@router.get("/admin/statistic", response_class=HTMLResponse)
+def statistic(request: Request):
+    try:
+        user: User = get_current_user_from_cookie(request)
+    except Exception as e:
+        return RedirectResponse("/auth/login")
+
+    income, used_tokens = db.get_statistic()
+    income = sum([item["amount"] for item in income])
+
+    used_tokens = [item["n_used_tokens"] for item in used_tokens]
+    sum_used_tokens = {}
+
+    for item in used_tokens:
+        for key in item.keys():
+            sum_used_tokens[key] = sum_used_tokens.get(key, 0) + (item[key]["n_input_tokens"] + item[key]["n_output_tokens"])
+
+    sum_used_tokens_rub = {}
+
+    for key, val in sum_used_tokens.items():
+        sum_used_tokens_rub[key] = val * config.config_yaml[f"rub_for_token_{key}"]
+
+    context = {
+        "user": user,
+        "request": request,
+        "income": income,
+        "sum_used_tokens": sum_used_tokens,
+        "sum_used_tokens_rub": sum_used_tokens_rub,
+    }
+    return templates.TemplateResponse("statistic.html", context)
 
 
 @router.get("/admin", response_class=HTMLResponse)

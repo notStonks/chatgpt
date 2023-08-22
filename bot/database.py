@@ -101,7 +101,7 @@ class Database:
 
         return dialog_id
 
-    def add_new_order(self, user_id: int):
+    def add_new_order(self, user_id: int, amount: int):
         order_id = str(uuid.uuid4())
         id = str(uuid.uuid4())
 
@@ -109,17 +109,20 @@ class Database:
             "_id": id,
             "user_id": user_id,
             "order_id": order_id,
+            "amount": amount,
+            "status": "NEW",
             "time": datetime.now()
         }
-
         self.order_collection.insert_one(order_dict)
 
         return order_id
 
-    def get_user_id(self, order_id: str):
+    def get_order_attribute(self, order_id: str, key: str):
         order_dict = self.order_collection.find_one({"order_id": order_id})
+        return order_dict[key]
 
-        return order_dict["user_id"]
+    def set_order_attribute(self, order_id: str, key: str, value: Any):
+        self.order_collection.update_one({"order_id": order_id},  {"$set": {key: value}})
 
     def get_user_attribute(self, user_id: int, key: str):
         self.check_if_user_exists(user_id, raise_exception=True)
@@ -199,3 +202,8 @@ class Database:
         user_dict = self.user_collection.find_one({"_id": user_id})
 
         return user_dict
+
+db = Database()
+
+for i in range(10):
+    db.set_order_attribute(i, "status", "CONFIRMED")

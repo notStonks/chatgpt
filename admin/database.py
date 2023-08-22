@@ -52,3 +52,8 @@ class Database:
         n_used_tokens_dict[model]["n_remaining_tokens"] = tokens_amount
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
+
+    def get_statistic(self):
+        income = self.order_collection.find({"status": "CONFIRMED"}, {"amount": 1})
+        used_tokens = self.user_collection.find({}, {"n_used_tokens": 1})
+        return income, used_tokens
