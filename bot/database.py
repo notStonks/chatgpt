@@ -1,11 +1,15 @@
+import logging
 from typing import Optional, Any
 
 import pymongo
 import uuid
-from datetime import datetime
+import datetime
 
 import config
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
@@ -15,6 +19,7 @@ class Database:
         self.user_collection = self.db["user"]
         self.dialog_collection = self.db["dialog"]
         self.order_collection = self.db["order"]
+        self.day_collection = self.db["day"]
 
     def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
         if self.user_collection.count_documents({"_id": user_id}) > 0:
@@ -43,8 +48,8 @@ class Database:
             "last_name": last_name,
             "phone": phone,
 
-            "last_interaction": datetime.now(),
-            "first_seen": datetime.now(),
+            "last_interaction": datetime.datetime.now(),
+            "first_seen": datetime.datetime.now(),
 
             "current_dialog_id": None,
             "current_chat_mode": "assistant",
@@ -83,7 +88,7 @@ class Database:
             "_id": dialog_id,
             "user_id": user_id,
             "chat_mode": self.get_user_attribute(user_id, "current_chat_mode"),
-            "start_time": datetime.now(),
+            "start_time": datetime.datetime.now(),
             "model": model,
             "messages": []
         }
@@ -111,11 +116,46 @@ class Database:
             "order_id": order_id,
             "amount": amount,
             "status": "NEW",
-            "time": datetime.now()
+            "time": datetime.datetime.now()
         }
         self.order_collection.insert_one(order_dict)
 
         return order_id
+
+    def add_new_day(self,):
+        id = str(uuid.uuid4())
+        date = datetime.datetime.today()
+        n_used_tokens = {}
+        for m in config.models["available_text_models"]:
+            # if model == m:
+            #     n_used_tokens[m] = {
+            #         "n_input_tokens": n_input_tokens,
+            #         "n_output_tokens": n_output_tokens,
+            #     }
+            # else:
+            n_used_tokens[m] = {
+                "n_input_tokens": 0,
+                "n_output_tokens": 0,
+            }
+
+        day_dict = {
+            "_id": id,
+            "date": date,
+            "n_used_tokens": n_used_tokens
+        }
+
+        return self.day_collection.insert_one(day_dict)
+
+    def get_day(self):
+        day_dict = self.day_collection.find_one({"date": datetime.datetime.today()})
+        if not day_dict:
+            day_dict = self.add_new_day()
+            day_dict = self.day_collection.find_one({"_id": day_dict.inserted_id})
+        return day_dict["_id"], day_dict["n_used_tokens"]
+
+    def update_day(self, id: str, value: Any):
+        logger.info(value)
+        self.day_collection.update_one({"_id": id}, {"$set": {"n_used_tokens": value}})
 
     def get_order_attribute(self, order_id: str, key: str):
         order_dict = self.order_collection.find_one({"order_id": order_id})
@@ -160,6 +200,12 @@ class Database:
                 "n_output_tokens": n_output_tokens,
                 "n_remaining_tokens": config.tokens_limit_for_new_user - n_input_tokens - n_output_tokens
             }
+
+        id, today = self.get_day()
+
+        today[model]["n_input_tokens"] += n_input_tokens
+        today[model]["n_output_tokens"] += n_input_tokens
+        self.update_day(id, today)
 
         # n_remaining_tokens -= n_input_tokens + n_output_tokens
 

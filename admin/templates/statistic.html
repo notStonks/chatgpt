@@ -24,23 +24,41 @@
     <aside class="right">
       <h3>Статистика</h3>
       <div>
-        <label for="">Пользователи:</label> {{ count }}
+        <form class="record" action="/admin/statistic" method="post">
+<!--          <input type="hidden" name="all_time" value="all_time" />-->
+          <input class="spinner button" name="all_time" type="submit" value="За все время">
+        </form>
+        <br>
+        <br>
+        <form class="record" action="/admin/statistic" method="post">
+          <input class="spinner button" name="month" type="submit" value="За 30 дней">
+        </form>
+        <br>
+        <br>
+        <form class="record" action="/admin/statistic" method="post">
+        <div class="preference">
+            <label>Начало</label>
+            <input type="date"  name="start" value="{{ start_date if start_date else min_date}}" min="{{ min_date }}" max="{{ max_date }}" />
+        </div>
+        <div class="preference">
+            <label>Конец</label>
+            <input type="date" name="end" min="{{ min_date }}" max="{{ max_date }}" value="{{ end_date if end_date else max_date }}" />
+        </div>
+        <br>
+        <input class="spinner button" type="submit" value="Выбрать диапазон">
+        </form>
+
       </div>
-<!--      <ul>-->
-<!--        <li><a href="#">Выйти</a></li>-->
-<!--      </ul>-->
     </aside>
     <main class="content">
         <div class="tbl-header">
         <table cellpadding="0" cellspacing="0" border="0">
           <thead>
             <tr>
-              <th>Поступления</th>
-              <th>Затраченные токены</th>
-              <th>Затраченные токены в рублях</th>
-<!--              <th>Дата последнего платежа</th>-->
-<!--              <th>Всего куплено токенов</th>-->
-<!--              <th>Номер телефона</th>-->
+              <th>Пользователи+</th>
+              <th>Поступления+</th>
+              <th>Затраченные токены-</th>
+              <th>Затраченные токены в рублях-</th>
             </tr>
           </thead>
         </table>
@@ -49,6 +67,7 @@
         <table cellpadding="0" cellspacing="0" border="0">
           <tbody>
             <tr>
+              <td>{{ count }}</td>
               <td>{{ income }} руб. </td>
               <td>
               {% for key, val in sum_used_tokens.items() %}
@@ -60,9 +79,6 @@
               {{ key }} : {{ val }}<br>
               {% endfor %}
               </td>
-<!--              <td>{{ user.payment_date }}</td>-->
-<!--              <td>{{ user.n_bought_tokens }}</td>-->
-<!--              <td>{{ user.phone }}</td>-->
             </tr>
 
 

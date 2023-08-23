@@ -1,15 +1,16 @@
+import datetime
 import logging
-from typing import Dict, Optional, Annotated, Union
 from datetime import timedelta
-from fastapi import Depends, APIRouter, HTTPException, Request, Response, status, Form
-from fastapi.responses import JSONResponse
+from typing import Union
+
+from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from utils.auth_core import (authenticate_user, create_access_token, get_current_user_from_cookie)
-from utils.auth_form import User, LoginForm
-from utils.settings import settings, templates
-import database
 import config
+import database
+from utils.auth_core import (get_current_user_from_cookie)
+from utils.auth_form import User
+from utils.settings import templates
 
 db = database.Database()
 logging.basicConfig(level=logging.INFO)
@@ -24,16 +25,15 @@ def statistic(request: Request):
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
         return RedirectResponse("/auth/login")
-
-    income, used_tokens = db.get_statistic()
+    income, used_tokens, count = db.get_statistic()
     income = sum([item["amount"] for item in income])
-
     used_tokens = [item["n_used_tokens"] for item in used_tokens]
     sum_used_tokens = {}
 
     for item in used_tokens:
         for key in item.keys():
-            sum_used_tokens[key] = sum_used_tokens.get(key, 0) + (item[key]["n_input_tokens"] + item[key]["n_output_tokens"])
+            sum_used_tokens[key] = (sum_used_tokens.get(key, 0) +
+                                    (item[key]["n_input_tokens"] + item[key]["n_output_tokens"]))
 
     sum_used_tokens_rub = {}
 
@@ -43,9 +43,74 @@ def statistic(request: Request):
     context = {
         "user": user,
         "request": request,
+        "count": count,
         "income": income,
         "sum_used_tokens": sum_used_tokens,
         "sum_used_tokens_rub": sum_used_tokens_rub,
+        "min_date": datetime.datetime(2023, 8, 3).strftime("%Y-%m-%d"),
+        "max_date": datetime.datetime.now().strftime("%Y-%m-%d"),
+    }
+    return templates.TemplateResponse("statistic.html", context)
+
+
+@router.post("/admin/statistic", response_class=HTMLResponse)
+def statistic(request: Request,
+              all_time: Union[str, None] = Form(default=None),
+              month: Union[str, None] = Form(default=None),
+              start: Union[str, None] = Form(default=None),
+              end: Union[str, None] = Form(default=None),
+              ):
+    try:
+        user: User = get_current_user_from_cookie(request)
+    except Exception as e:
+        return RedirectResponse("/auth/login")
+    logger.info(start)
+    logger.info(end)
+
+    if start and end:
+        start_str = start
+        end_str = end
+        start = datetime.datetime(*[int(i) for i in start.split("-")])
+        end = datetime.datetime(*[int(i) for i in end.split("-")])
+    else:
+        start_str = datetime.datetime(2023, 8, 3).strftime("%Y-%m-%d")
+        end_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    if all_time:
+        start = datetime.datetime(2023, 8, 3)
+        end = datetime.datetime.now()
+    if month:
+        start = datetime.datetime.now() - datetime.timedelta(days=30)
+        end = datetime.datetime.now()
+    income, used_tokens, count = db.get_statistic(start, end)
+    income = sum([item["amount"] for item in income])
+
+    used_tokens = [item["n_used_tokens"] for item in used_tokens]
+    sum_used_tokens = {}
+
+    for item in used_tokens:
+        for key in item.keys():
+            sum_used_tokens[key] = (sum_used_tokens.get(key, 0) +
+                                    (item[key]["n_input_tokens"] + item[key]["n_output_tokens"]))
+
+    sum_used_tokens_rub = {}
+
+    for key, val in sum_used_tokens.items():
+        sum_used_tokens_rub[key] = val * config.config_yaml[f"rub_for_token_{key}"]
+
+    start_str = datetime.datetime(2023, 8, 3).strftime("%Y-%m-%d")
+    end_str = datetime.datetime.now().strftime("%Y-%m-%d")
+
+    context = {
+        "user": user,
+        "request": request,
+        "count": count,
+        "income": income,
+        "sum_used_tokens": sum_used_tokens,
+        "sum_used_tokens_rub": sum_used_tokens_rub,
+        "min_date": start_str,
+        "max_date": end_str,
+        "start_date": start.strftime("%Y-%m-%d"),
+        "end_date": end.strftime("%Y-%m-%d")
     }
     return templates.TemplateResponse("statistic.html", context)
 

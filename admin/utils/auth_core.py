@@ -18,6 +18,7 @@ from .settings import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class OAuth2PasswordBearerWithCookie(OAuth2):
     """
     This class is taken directly from FastAPI:
@@ -68,7 +69,7 @@ oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="token")
 
 def create_access_token(data: Dict) -> str:
     to_encode = data.copy()
-    expire = dt.datetime.utcnow() + dt.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = dt.datetime.utcnow() + dt.timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode,

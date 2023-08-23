@@ -2,7 +2,7 @@ from typing import Optional, Any
 
 import pymongo
 import uuid
-from datetime import datetime
+import datetime
 
 import config
 
@@ -53,7 +53,8 @@ class Database:
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
 
-    def get_statistic(self):
-        income = self.order_collection.find({"status": "CONFIRMED"}, {"amount": 1})
+    def get_statistic(self, start: datetime = datetime.datetime(2023, 8, 3),
+                      end: datetime = datetime.datetime.now()):
+        income = self.order_collection.find({"status": "CONFIRMED", 'time': {'$gte': start, '$lt': end}}, {"amount": 1})
         used_tokens = self.user_collection.find({}, {"n_used_tokens": 1})
-        return income, used_tokens
+        return income, used_tokens, self.user_collection.find({'first_seen': {'$gte': start, '$lt': end}}).count()
