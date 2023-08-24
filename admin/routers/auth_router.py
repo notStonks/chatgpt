@@ -4,7 +4,7 @@ from fastapi import Depends, APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from utils.auth_core import (authenticate_user, create_access_token, get_current_user_from_cookie)
-from utils.auth_form import User, LoginForm
+from utils.forms import User, LoginForm
 from utils.settings import settings, templates
 
 router = APIRouter()

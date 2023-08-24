@@ -3,14 +3,15 @@ import logging
 from datetime import timedelta
 from typing import Union
 
-from fastapi import APIRouter, Request, Form
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-import config
 import database
+from utils.funcs import update_config, stats_count
 from utils.auth_core import (get_current_user_from_cookie)
-from utils.auth_form import User
-from utils.settings import templates
+from utils.forms import User, SettingsForm
+from utils.settings import templates, Settings
+import ruamel.yaml
 
 db = database.Database()
 logging.basicConfig(level=logging.INFO)
@@ -19,26 +20,64 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+@router.get("/admin/settings", response_class=HTMLResponse)
+def admin(request: Request):
+    try:
+        user: User = get_current_user_from_cookie(request)
+    except Exception as e:
+        return RedirectResponse("/auth/login")
+
+    config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(Settings.FILE_NAME))
+
+    context = {
+        "user": user,
+        "request": request,
+        "settings": config
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    return templates.TemplateResponse("settings.html", context)
+
+
+@router.post("/admin/settings", response_class=HTMLResponse)
+async def admin(request: Request):
+    form = SettingsForm(request)
+    await form.load_data()
+    logger.info(form.__dict__)
+    try:
+        user: User = get_current_user_from_cookie(request)
+    except Exception as e:
+        return RedirectResponse("/auth/login")
+
+    config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(Settings.FILE_NAME))
+    update_config(config, form)
+
+    yaml = ruamel.yaml.YAML()
+    yaml.indent(mapping=ind, sequence=ind, offset=bsi)
+    with open(Settings.FILE_NAME, 'w') as fp:
+        yaml.dump(config, fp)
+
+    context = {
+        "user": user,
+        "request": request,
+        "settings": form
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+    return RedirectResponse("/admin/settings", status_code=303)
+
+
 @router.get("/admin/statistic", response_class=HTMLResponse)
 def statistic(request: Request):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
         return RedirectResponse("/auth/login")
-    income, used_tokens, count = db.get_statistic()
-    income = sum([item["amount"] for item in income])
-    used_tokens = [item["n_used_tokens"] for item in used_tokens]
-    sum_used_tokens = {}
 
-    for item in used_tokens:
-        for key in item.keys():
-            sum_used_tokens[key] = (sum_used_tokens.get(key, 0) +
-                                    (item[key]["n_input_tokens"] + item[key]["n_output_tokens"]))
-
-    sum_used_tokens_rub = {}
-
-    for key, val in sum_used_tokens.items():
-        sum_used_tokens_rub[key] = val * config.config_yaml[f"rub_for_token_{key}"]
+    income, count, days = db.get_statistic()
+    sum_used_tokens, sum_used_tokens_rub = stats_count(income, days)
 
     context = {
         "user": user,
@@ -64,8 +103,6 @@ def statistic(request: Request,
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
         return RedirectResponse("/auth/login")
-    logger.info(start)
-    logger.info(end)
 
     if start and end:
         start_str = start
@@ -81,21 +118,9 @@ def statistic(request: Request,
     if month:
         start = datetime.datetime.now() - datetime.timedelta(days=30)
         end = datetime.datetime.now()
-    income, used_tokens, count = db.get_statistic(start, end)
-    income = sum([item["amount"] for item in income])
 
-    used_tokens = [item["n_used_tokens"] for item in used_tokens]
-    sum_used_tokens = {}
-
-    for item in used_tokens:
-        for key in item.keys():
-            sum_used_tokens[key] = (sum_used_tokens.get(key, 0) +
-                                    (item[key]["n_input_tokens"] + item[key]["n_output_tokens"]))
-
-    sum_used_tokens_rub = {}
-
-    for key, val in sum_used_tokens.items():
-        sum_used_tokens_rub[key] = val * config.config_yaml[f"rub_for_token_{key}"]
+    income, count, days = db.get_statistic(start, end)
+    sum_used_tokens, sum_used_tokens_rub = stats_count(income, days)
 
     start_str = datetime.datetime(2023, 8, 3).strftime("%Y-%m-%d")
     end_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -122,8 +147,7 @@ def admin(request: Request, page: int = 1, limit: int = 10):
     except Exception as e:
         return RedirectResponse("/auth/login")
     users, count = db.get_users(page, limit)
-    # 359835292
-    logger.info(users)
+
     pages = count / limit if count % limit == 0 else count // limit + 1
     context = {
         "user": user,
@@ -153,7 +177,6 @@ def user(request: Request, user_id: int):
         user_dict["n_used_tokens"][key]["used_tokens"] = used_toks
 
     if "payment_date" in user_dict and user_dict["payment_date"] is not None:
-
         user_dict["payment_date"] = (user_dict["payment_date"] + timedelta(hours=3)).strftime('%m.%d.%Y %H:%M')
 
     context = {

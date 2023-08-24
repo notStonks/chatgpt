@@ -11,6 +11,7 @@ import config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class Database:
     def __init__(self):
         self.client = pymongo.MongoClient(config.mongodb_uri)
@@ -124,7 +125,8 @@ class Database:
 
     def add_new_day(self,):
         id = str(uuid.uuid4())
-        date = datetime.datetime.today()
+        # date = datetime.datetime(day.year, day.month, day.day, 0, 0, 0)
+        date = datetime.date.today().isoformat()
         n_used_tokens = {}
         for m in config.models["available_text_models"]:
             # if model == m:
@@ -147,14 +149,13 @@ class Database:
         return self.day_collection.insert_one(day_dict)
 
     def get_day(self):
-        day_dict = self.day_collection.find_one({"date": datetime.datetime.today()})
+        day_dict = self.day_collection.find_one({"date": datetime.date.today().isoformat()})
         if not day_dict:
             day_dict = self.add_new_day()
             day_dict = self.day_collection.find_one({"_id": day_dict.inserted_id})
         return day_dict["_id"], day_dict["n_used_tokens"]
 
     def update_day(self, id: str, value: Any):
-        logger.info(value)
         self.day_collection.update_one({"_id": id}, {"$set": {"n_used_tokens": value}})
 
     def get_order_attribute(self, order_id: str, key: str):
@@ -204,7 +205,7 @@ class Database:
         id, today = self.get_day()
 
         today[model]["n_input_tokens"] += n_input_tokens
-        today[model]["n_output_tokens"] += n_input_tokens
+        today[model]["n_output_tokens"] += n_output_tokens
         self.update_day(id, today)
 
         # n_remaining_tokens -= n_input_tokens + n_output_tokens

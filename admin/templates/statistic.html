@@ -18,6 +18,7 @@
     <aside class="left">
       <ul>
         <li><a href="/admin">Главная</a></li>
+        <li><a href="/admin/settings">Настройки</a></li>
         <li><a href="/auth/logout">Выйти</a></li>
       </ul>
     </aside>
@@ -71,12 +72,12 @@
               <td>{{ income }} руб. </td>
               <td>
               {% for key, val in sum_used_tokens.items() %}
-              {{ key }} : {{ val }}<br>
+              {{ key }} : {{ val }} <br>
               {% endfor %}
               </td>
               <td>
               {% for key, val in sum_used_tokens_rub.items() %}
-              {{ key }} : {{ val }}<br>
+              {{ key }} : {{ val }} руб.<br>
               {% endfor %}
               </td>
             </tr>

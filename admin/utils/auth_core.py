@@ -12,7 +12,7 @@ from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 from rich import print
 
 import config
-from .auth_form import User
+from .forms import User
 from .settings import settings
 
 logging.basicConfig(level=logging.INFO)

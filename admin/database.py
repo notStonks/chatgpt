@@ -15,6 +15,7 @@ class Database:
         self.user_collection = self.db["user"]
         self.dialog_collection = self.db["dialog"]
         self.order_collection = self.db["order"]
+        self.day_collection = self.db["day"]
 
     # --- Admin part
     def get_users(self, page: int, limit: int):
@@ -55,6 +56,6 @@ class Database:
 
     def get_statistic(self, start: datetime = datetime.datetime(2023, 8, 3),
                       end: datetime = datetime.datetime.now()):
-        income = self.order_collection.find({"status": "CONFIRMED", 'time': {'$gte': start, '$lt': end}}, {"amount": 1})
-        used_tokens = self.user_collection.find({}, {"n_used_tokens": 1})
-        return income, used_tokens, self.user_collection.find({'first_seen': {'$gte': start, '$lt': end}}).count()
+        income = self.order_collection.find({"status": "CONFIRMED", 'time': {'$gte': start, '$lte': end}}, {"amount": 1})
+        days = self.day_collection.find({'date': {'$gte': start.date().isoformat(), '$lte': end.date().isoformat()}}, {"_id": 0, "n_used_tokens": 1})
+        return income, self.user_collection.find({'first_seen': {'$gte': start, '$lte': end}}).count(), days

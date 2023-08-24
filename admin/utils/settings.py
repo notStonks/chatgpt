@@ -7,6 +7,7 @@ class Settings:
     ALGORITHM = "HS256"
     ACCESS_TOKEN_EXPIRE_DAYS = 14
     COOKIE_NAME = "access_token"
+    FILE_NAME = '../config/config.yml'
 
 
 settings = Settings()

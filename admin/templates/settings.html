@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/edit.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Чат ГПТ</h1>
+    </header>
+    <aside class="left">
+      <ul>
+
+        <li><a href="/admin">Главная</a></li>
+        <li><a  href="/admin/statistic">Статистика</a></li>
+        <li><a href="/auth/logout">Выйти</a></li>
+
+      </ul>
+    </aside>
+    <main class="content">
+        <form class="record" action="/admin/settings" method="post">
+        <div class="preference">
+
+            <label for="">Телеграмм токен</label>
+            <input type="text" name="telegram_token" id="" value="{{ settings.telegram_token }}" />
+        </div>
+        <div class="preference">
+            <label for="">Open AI токен</label>
+            <input type="text" name="openai_api_key" id="" value="{{ settings.openai_api_key}}" />
+        </div>
+            <br>
+        <div class="preference">
+            <label for="">Лимит токенов для новых пользователей</label>
+            <input type="text" name="tokens_limit_for_new_user" id="" value="{{ settings.tokens_limit_for_new_user }}" />
+        </div>
+            <div class="preference">
+            <label for="">Токены за 200 р. (gpt-3.5-turbo)</label>
+            <input type="text" name="tokens_for_200_gpt3" id="" value="{{ settings.tokens_for_200_gpt3 if settings.tokens_for_200_gpt3 else settings['tokens_for_200_gpt-3.5-turbo'] }}" />
+        </div>
+        <div class="preference">
+            <label for="">Токены за 500 р. (gpt-3.5-turbo)</label>
+            <input type="text" name="tokens_for_500_gpt3" id="" value="{{ settings['tokens_for_500_gpt-3.5-turbo'] }}" />
+        </div>
+            <div class="preference">
+            <label for="">Токены за 1000 р. (gpt-3.5-turbo)</label>
+            <input type="text" name="tokens_for_1000_gpt3" id="" value="{{ settings['tokens_for_1000_gpt-3.5-turbo'] }}" />
+        </div>
+            <br>
+            <div class="preference">
+            <label for="">Токены за 200 р. (gpt-4)</label>
+            <input type="text" name="tokens_for_200_gpt4" id="" value="{{ settings['tokens_for_200_gpt-4'] }}" />
+        </div>
+            <div class="preference">
+            <label for="">Токены за 500 р. (gpt-4)</label>
+            <input type="text" name="tokens_for_500_gpt4" id="" value="{{ settings['tokens_for_500_gpt-4'] }}" />
+        </div>
+            <div class="preference">
+            <label for="">Токены за 1000 р. (gpt-4)</label>
+            <input type="text" name="tokens_for_1000_gpt4" id="" value="{{ settings['tokens_for_1000_gpt-4'] }}" />
+        </div>
+            <br>
+            <div class="preference">
+            <label for="">Для расчета баланса в рублях</label>
+        </div>
+            <div class="preference">
+            <label for="">1000 токенов gpt-3.5-turbo в руб.</label>
+            <input type="text" name="token_gpt3" id="" value="{{ settings['rub_for_token_gpt-3.5-turbo'] }}" />
+        </div>
+            <div class="preference">
+            <label for="">1000 токенов gpt-4 в руб.</label>
+            <input type="text" name="token_gpt4" id="" value="{{ settings['rub_for_token_gpt-4'] }}" />
+        </div>
+            <br>
+            <br>
+        <input class="spinner button" type="submit" value="Сохранить">
+            <br>
+            <br>
+        </form>
+      <hr><br>
+    </main>
+
+  </div>
+<!--  <div class="footer"><footer>adadasda</footer></div>-->
+
+</body>
+
+
+</html>
