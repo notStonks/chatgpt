@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Чат</title>
+  <title>Информация о пользователе</title>
   <link rel="stylesheet" href="{{ url_for('static', path='/css/edit.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
 <body>
   <div class="container">
     <header class="header">
-      <h1>Чат ГПТ</h1>
+      <h1>Pray GPT Bot</h1>
     </header>
     <aside class="left">
       <ul>
@@ -28,19 +28,31 @@
         <form class="record" action="/admin/change/{{ user_dict._id }}" method="post">
         <div class="preference">
             <label for="">Telegram id</label>
-            <input type="text" name="" id="" value="{{ user_dict._id }}" readonly/>
+<!--            <input type="text" name="" id="" value="{{ user_dict._id }}" readonly/>-->
+            <div class="out-txt">
+                <div class="txt">{{ user_dict._id }}</div>
+            </div>
         </div>
         <div class="preference">
             <label for="">Username</label>
-            <input type="text" name="" id="" value="{{ user_dict.username }}" readonly/>
+<!--            <input type="text" name="" id="" value="{{ user_dict.username }}" readonly/>-->
+            <div class="out-txt">
+                <div class="txt">{{ user_dict.username }}</div>
+            </div>
         </div>
         <div class="preference">
             <label for="">Имя</label>
-            <input type="text" name="" id="" value="{{ user_dict.first_name }}" readonly/>
+<!--            <input type="text" name="" id="" value="{{ user_dict.first_name }}" readonly/>-->
+            <div class="out-txt">
+            <div class="txt">{{ user_dict.first_name }}</div>
+            </div>
         </div>
         <div class="preference">
             <label for="">Фамилия</label>
-            <input type="text" name="" id="" value="{{ user_dict.last_name }}" readonly/>
+<!--            <input type="text" name="" id="" value="{{ user_dict.last_name }}" readonly/>-->
+            <div class="out-txt">
+            <div class="txt">{{ user_dict.last_name }}</div>
+            </div>
         </div>
             <div class="preference">
             <label for="">Осталось токенов</label>
@@ -48,9 +60,30 @@
 <!--            <input type="text" name="" id="" value="{{ user_dict.n_used_tokens }}" readonly/>-->
                 {% for key in user_dict.n_used_tokens.keys() %}
                         <div class="inner-tokens">
-                            <label for="">{{ key }}</label>
-                            <input type="text" name="{{ key|replace('.', '')|replace('-', '') }}" value="{{ user_dict.n_used_tokens[key]['n_remaining_tokens'] }}"/> <br>
-                        </div>
+<!--                            <label for="">{{ key }}</label>-->
+                            <div class="label">
+                                    <div class="inner-label">
+                                    <label for="">{{ key }}</label>
+                                    </div>
+                            </div>
+                            <div class="token-txt-inner">
+                                    <div class="txt-inner">
+                                    <input type="text" name="{{ key|replace('.', '')|replace('-', '') }}" value="{{ user_dict.n_used_tokens[key]['n_remaining_tokens'] }}"/>
+                                    </div>
+                            </div>
+                            <br>
+
+                            <div class="rub">
+                               <div class="label">
+                                    <div class="inner-label">
+                                    <label for="">В рублях</label>
+                                    </div>
+                                </div>
+                                    <div class="txt-inner">
+                                    {{ "%.2f"|format(user_dict.n_used_tokens[key]['remain_tokens_rub']) }}
+                                    </div>
+                                </div>
+                        </div><br>
                 {% endfor %}
                     </div>
             </div>
@@ -59,34 +92,67 @@
                     <div class="tokens">
 <!--            <input type="text" name="" id="" value="{{ user_dict.n_used_tokens }}" readonly/>-->
                         {% for key in user_dict.n_used_tokens.keys() %}
-                            <div class="inner-tokens">
-                                <label for="">{{ key }}</label>
-                                <input type="text" name="" id="" value="{{ user_dict.n_used_tokens[key]['used_tokens'] }}" readonly/> <br>
-                            </div>
+                            <div class="inner-tokens token-txt">
+
+                                <div class="label">
+                                    <div class="inner-label">
+                                    <label for="">{{ key }}</label>
+                                    </div>
+                                </div>
+
+<!--                                <div class="token-txt">-->
+                                <div class="token-txt-inner">
+                                    <div class="txt-inner">
+                                    {{ user_dict.n_used_tokens[key]['used_tokens'] }}
+                                    </div>
+                                </div>
+<!--                                <input type="text" name="" id="" value="{{ user_dict.n_used_tokens[key]['used_tokens'] }}" readonly/> <br>-->
+                            </div><br>
+
                         {% endfor %}
+                        </div>
                      </div>
-            </div>
+<!--            </div>-->
         <div class="preference">
+
             <label for="">Всего куплено токенов</label>
             {% if user_dict.n_bought_tokens %}
                 {% for key in user_dict.n_bought_tokens.keys() %}
-                    <input type="text" name="" id="" value="{{ user_dict.n_bought_tokens[key] }}" readonly/>
+<!--                    <input type="text" name="" id="" value="{{ user_dict.n_bought_tokens[key] }}" readonly/>-->
+                    <div class="out-txt">
+                    <div class="txt">{{ user_dict.n_bought_tokens[key] }}</div>
+                    </div>
                 {% endfor %}
             {% else %}
-                <input type="text" name="" id="" value="" readonly/>
+<!--                <input type="text" name="" id="" value="" readonly/>-->
+            <div class="out-txt">
+                    <div class="txt"></div>
+            </div>
             {% endif %}
+
         </div>
             <div class="preference">
             <label for="">Дата последнего платежа</label>
-            <input type="text" name="" id="" value="{{ user_dict.payment_date }}" readonly/>
+<!--            <input type="text" name="" id="" value="{{ user_dict.payment_date }}" readonly/>-->
+                <div class="out-txt">
+                <div class="txt">{{ user_dict.payment_date }}</div>
+                </div>
             </div>
         <div class="preference">
             <label for="">Номер телефона</label>
-            <input type="text" name="" id="" value="{{ user_dict.phone }}" readonly/>
+<!--            <input type="text" name="" id="" value="{{ user_dict.phone }}" readonly/>-->
+            <div class="out-txt">
+            <div class="txt">{{ user_dict.phone }}</div>
+            </div>
         </div>
             <div class="preference">
             <label for="">Бан</label>
-            <input type="checkbox" name="ban" id="" value='True' {{ 'checked' if  user_dict.ban  }}/>
+                <div class="out-txt">
+                    <div class="txt">
+                    <input  type="checkbox" name="ban" id="" value='True' {{ 'checked' if  user_dict.ban  }}/>
+                    </div>
+                </div>
+
             </div>
             <br>
             <br>

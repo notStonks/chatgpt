@@ -1,13 +1,13 @@
 import logging
 from datetime import datetime
 
+import telegram
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
-import database
-import config
-import telegram
-from utils import get_buy_keyboard, get_payment_url
 
+import config
+import database
+from utils import get_buy_keyboard, get_payment_url
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

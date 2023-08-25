@@ -1,5 +1,5 @@
-from .forms import SettingsForm
 import config
+from .forms import SettingsForm
 
 
 def update_config(config, form: SettingsForm):
@@ -40,4 +40,4 @@ def stats_count(income, days):
     for key, val in sum_used_tokens.items():
         sum_used_tokens_rub[key] = val * (config.config_yaml[f"rub_for_token_{key}"] / 1000)
 
-    return sum_used_tokens, sum_used_tokens_rub
+    return sum_used_tokens, sum_used_tokens_rub, income

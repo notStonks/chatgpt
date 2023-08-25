@@ -1,6 +1,7 @@
+from pathlib import Path
+
 import dotenv
 import yaml
-from pathlib import Path
 from passlib.handlers.sha2_crypt import sha512_crypt as crypto
 
 config_dir = Path(__file__).parent.parent.resolve() / "config"

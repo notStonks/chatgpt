@@ -3,8 +3,9 @@ from typing import Dict
 from fastapi import Depends, APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from utils.auth_core import (authenticate_user, create_access_token, get_current_user_from_cookie)
-from utils.forms import User, LoginForm
+
+from utils.auth_core import (authenticate_user, create_access_token)
+from utils.forms import LoginForm
 from utils.settings import settings, templates
 
 router = APIRouter()
@@ -35,17 +36,17 @@ def login_for_access_token(
 # --------------------------------------------------------------------------
 # Home Page
 # --------------------------------------------------------------------------
-@router.get("/", response_class=HTMLResponse)
-def index(request: Request):
-    try:
-        user = get_current_user_from_cookie(request)
-    except:
-        user = None
-    context = {
-        "user": user,
-        "request": request,
-    }
-    return templates.TemplateResponse("index.html", context)
+# @router.get("/", response_class=HTMLResponse)
+# def index(request: Request):
+#     try:
+#         user = get_current_user_from_cookie(request)
+#     except:
+#         user = None
+#     context = {
+#         "user": user,
+#         "request": request,
+#     }
+#     return templates.TemplateResponse("index.html", context)
 
 
 # --------------------------------------------------------------------------

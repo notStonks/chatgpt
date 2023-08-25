@@ -20,7 +20,7 @@
     .header h1 {
       color: #222222;
       font-size: 30px;
-      font-family: "Pacifico", cursive;
+      font-family: "Roboto", cursive;
     }
 
     .header .social a {
@@ -61,6 +61,40 @@
       float: right;
 }
 
+    .out-txt{
+        width: 180px
+    }
+    .txt{
+        float: left;
+        text-align: left;
+    }
+    .token-txt{
+        width: 285px;
+        float: left;
+        text-align: left;
+    }
+    .token-txt-inner{
+        float: right;
+        width: 180px;
+    }
+     .txt-inner{
+        float: left;
+    }
+
+    .label{
+        float: left;
+
+    }
+
+    .inner-label{
+        float: right;
+        text-align: right;
+        width: 95px;
+    }
+    .rub{
+        width: 200px;
+        float: left;
+    }
     label{
         padding-right: 10px;
     }

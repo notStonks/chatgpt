@@ -1,16 +1,12 @@
-import os
-import sys
 import logging
 import asyncio
-import traceback
-import html
-import json
+import logging
 import tempfile
-import pydub
-from pathlib import Path
 from datetime import datetime
-import openai
+from pathlib import Path
 
+import openai
+import pydub
 import telegram
 from telegram import (
     Update,
@@ -19,6 +15,7 @@ from telegram import (
     InlineKeyboardMarkup,
     BotCommand
 )
+from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
     ApplicationBuilder,
@@ -29,14 +26,11 @@ from telegram.ext import (
     AIORateLimiter,
     filters
 )
-from telegram.constants import ParseMode, ChatAction
 
 import config
 import database
 import openai_utils
 from utils import get_buy_keyboard, get_payment_url
-
-
 
 # setup
 db = database.Database()

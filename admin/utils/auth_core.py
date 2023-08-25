@@ -2,7 +2,6 @@ import datetime as dt
 import logging
 from typing import Dict, Optional
 
-
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
@@ -126,8 +125,6 @@ def get_current_user_from_cookie(request: Request) -> User:
     for views that should work for both logged in, and not logged in users.
     """
     token = request.cookies.get(settings.COOKIE_NAME)
-    logger.info(token)
-    logger.info(type(token))
     user = decode_token(token)
     return user
 

@@ -1,12 +1,12 @@
 import logging
+
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 
-from tinkoff import TinkoffPayment
 import config
-
+from tinkoff import TinkoffPayment
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

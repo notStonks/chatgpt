@@ -20,7 +20,7 @@
     .header h1 {
       color: #222222;
       font-size: 30px;
-      font-family: "Pacifico", cursive;
+      font-family: "Roboto", cursive;
     }
 
     .header .social a {
@@ -42,7 +42,7 @@
     }
 
     .content {
-      width: 1200px;
+      width: 1150px;
       margin-left: 190px;
       border-left: 1px solid #d4d4d4;
       border-right: 1px solid #d4d4d4;

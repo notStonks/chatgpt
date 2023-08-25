@@ -1,12 +1,11 @@
+import datetime
 import logging
+import uuid
 from typing import Optional, Any
 
 import pymongo
-import uuid
-import datetime
 
 import config
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

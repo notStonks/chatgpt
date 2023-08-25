@@ -1,13 +1,11 @@
-import sys
 import os
+import sys
 from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from routers import auth_router, data_router
-
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Create a "database" to hold your data. This is just for example purposes. In

@@ -3,15 +3,16 @@ import logging
 from datetime import timedelta
 from typing import Union
 
-from fastapi import APIRouter, Request, Form, Depends
+import ruamel.yaml
+from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+import config
 import database
-from utils.funcs import update_config, stats_count
 from utils.auth_core import (get_current_user_from_cookie)
 from utils.forms import User, SettingsForm
+from utils.funcs import update_config, stats_count
 from utils.settings import templates, Settings
-import ruamel.yaml
 
 db = database.Database()
 logging.basicConfig(level=logging.INFO)
@@ -77,7 +78,7 @@ def statistic(request: Request):
         return RedirectResponse("/auth/login")
 
     income, count, days = db.get_statistic()
-    sum_used_tokens, sum_used_tokens_rub = stats_count(income, days)
+    sum_used_tokens, sum_used_tokens_rub, income = stats_count(income, days)
 
     context = {
         "user": user,
@@ -120,7 +121,7 @@ def statistic(request: Request,
         end = datetime.datetime.now()
 
     income, count, days = db.get_statistic(start, end)
-    sum_used_tokens, sum_used_tokens_rub = stats_count(income, days)
+    sum_used_tokens, sum_used_tokens_rub, income = stats_count(income, days)
 
     start_str = datetime.datetime(2023, 8, 3).strftime("%Y-%m-%d")
     end_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -171,10 +172,10 @@ def user(request: Request, user_id: int):
     user_dict = db.get_user(user_id)
 
     for key in user_dict["n_used_tokens"].keys():
-        logger.info(user_dict["n_used_tokens"][key].items())
         used_toks = sum(item[1] for item in list(user_dict["n_used_tokens"][key].items())[:-1])
-        logger.info(list(user_dict["n_used_tokens"][key].items())[-1][1])
         user_dict["n_used_tokens"][key]["used_tokens"] = used_toks
+        user_dict["n_used_tokens"][key]["remain_tokens_rub"] = (user_dict["n_used_tokens"][key]["n_remaining_tokens"] *
+                                                                config.config_yaml[f"rub_for_token_{key}"] / 1000)
 
     if "payment_date" in user_dict and user_dict["payment_date"] is not None:
         user_dict["payment_date"] = (user_dict["payment_date"] + timedelta(hours=3)).strftime('%m.%d.%Y %H:%M')
