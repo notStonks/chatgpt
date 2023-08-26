@@ -26,7 +26,7 @@ def admin(request: Request):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
 
     config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(Settings.FILE_NAME))
 
@@ -49,7 +49,7 @@ async def admin(request: Request):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
 
     config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(Settings.FILE_NAME))
     update_config(config, form)
@@ -75,11 +75,11 @@ def statistic(request: Request):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
 
     income, count, days = db.get_statistic()
     sum_used_tokens, sum_used_tokens_rub, income = stats_count(income, days)
-
+    logger.info(sum_used_tokens)
     context = {
         "user": user,
         "request": request,
@@ -103,7 +103,7 @@ def statistic(request: Request,
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
 
     if start and end:
         start_str = start
@@ -146,7 +146,7 @@ def admin(request: Request, page: int = 1, limit: int = 10):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
     users, count = db.get_users(page, limit)
 
     pages = count / limit if count % limit == 0 else count // limit + 1
@@ -167,7 +167,7 @@ def user(request: Request, user_id: int):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
 
     user_dict = db.get_user(user_id)
 
@@ -194,7 +194,7 @@ def update_user(request: Request, user_id: int, gpt35turbo: Union[int, None] = F
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
-        return RedirectResponse("/auth/login")
+        return RedirectResponse("/admin/auth/login")
     user_dict = db.get_user(user_id)
 
     logger.info(user_dict)

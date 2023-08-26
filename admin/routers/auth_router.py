@@ -70,7 +70,7 @@ def login_for_access_token(
 # --------------------------------------------------------------------------
 # Login - GET
 # --------------------------------------------------------------------------
-@router.get("/auth/login", response_class=HTMLResponse)
+@router.get("/admin/auth/login", response_class=HTMLResponse)
 def login_get(request: Request):
     context = {
         "request": request,
@@ -82,7 +82,7 @@ def login_get(request: Request):
 # Login - POST
 # --------------------------------------------------------------------------
 
-@router.post("/auth/login", response_class=HTMLResponse)
+@router.post("/admin/auth/login", response_class=HTMLResponse)
 async def login_post(request: Request):
     form = LoginForm(request)
     await form.load_data()
@@ -102,7 +102,7 @@ async def login_post(request: Request):
 # --------------------------------------------------------------------------
 # Logout
 # --------------------------------------------------------------------------
-@router.get("/auth/logout", response_class=HTMLResponse)
+@router.get("/admin/auth/logout", response_class=HTMLResponse)
 def login_get():
     response = RedirectResponse(url="/")
     response.delete_cookie(settings.COOKIE_NAME)

@@ -135,8 +135,5 @@ config/models_en.yml
 
 docker-compose.dev.yml
 
-
-mongodb/
-/config/config.yml
-/config/config.env
-
+mongodb/!/config/config.yml
+!/config/config.env

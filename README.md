@@ -10,4 +10,3 @@
  - gunicorn
  - uvicorn
  - nginx
-

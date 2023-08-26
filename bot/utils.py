@@ -1,4 +1,5 @@
 import logging
+
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -7,14 +8,13 @@ from telegram import (
 import config
 from tinkoff import TinkoffPayment
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def get_payment_url(order_id: str, amount: int):
     try:
-        payment = TinkoffPayment(terminal_key=config.terminal_key, password=config.password)
+        payment = TinkoffPayment(terminal_key=str(config.terminal_key), password=config.password)
 
         payment_result = payment.init(
             order_id, str(amount*100),

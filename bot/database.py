@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import logging
 import uuid
 from typing import Optional, Any
@@ -19,9 +19,7 @@ class Database:
         self.user_collection = self.db["user"]
         self.dialog_collection = self.db["dialog"]
         self.order_collection = self.db["order"]
-
         self.day_collection = self.db["day"]
-
 
     def check_if_user_exists(self, user_id: int, raise_exception: bool = False):
         if self.user_collection.count_documents({"_id": user_id}) > 0:
@@ -40,7 +38,6 @@ class Database:
             first_name: str = "",
             last_name: str = "",
             phone: str = "",
-
     ):
         user_dict = {
             "_id": user_id,
@@ -53,7 +50,6 @@ class Database:
 
             "last_interaction": datetime.datetime.now(),
             "first_seen": datetime.datetime.now(),
-
 
             "current_dialog_id": None,
             "current_chat_mode": "assistant",
@@ -74,7 +70,6 @@ class Database:
             # "n_remaining_tokens": 5000,
 
             "n_generated_images": 0,
-
             "n_transcribed_seconds": 0.0, # voice message transcription
 
             "payment_date": None,
@@ -110,7 +105,6 @@ class Database:
         )
 
         return dialog_id
-
 
     def add_new_order(self, user_id: int, amount: int):
         order_id = str(uuid.uuid4())

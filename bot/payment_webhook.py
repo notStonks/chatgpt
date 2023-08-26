@@ -46,9 +46,7 @@ async def _confirmed_payment(order_id: str, amount: int):
         amount = amount // 100
         tokens_amount = config.config_yaml[f"tokens_for_{amount}_{current_model}"]
         db.update_n_remaining_tokens(user_id, tokens_amount)
-
         db.set_user_attribute(user_id, "payment_date", datetime.now())
-
         bot = telegram.Bot(config.telegram_token)
         async with bot:
             await bot.send_message(chat_id=chat_id, text=f"Успешно куплено {tokens_amount} токенов")
@@ -70,7 +68,6 @@ async def _rejected_payment(order_id: str, amount: str):
 
         user_id = db.get_order_attribute(order_id, "user_id")
         db.set_order_attribute(order_id, "status", "REJECTED")
-        
         chat_id = db.get_user_attribute(user_id, "chat_id")
 
         bot = telegram.Bot(config.telegram_token)

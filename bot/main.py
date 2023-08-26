@@ -851,14 +851,14 @@ def run_bot() -> None:
     application.add_error_handler(error_handle)
 
     # start the bot
-    application.run_polling()
+    # application.run_polling()
     # application.bot.set_webhook(url=url)
 
-    # application.run_webhook(
-    #     listen='0.0.0.0',
-    #     port=8443,
-    #     webhook_url=f"{config.webhook_url}",
-    #     drop_pending_updates=True)
+    application.run_webhook(
+        listen='0.0.0.0',
+        port=8443,
+        webhook_url=f"{config.webhook_url}",
+        drop_pending_updates=True)
 
 
 if __name__ == "__main__":

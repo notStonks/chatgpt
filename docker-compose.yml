@@ -14,13 +14,13 @@ services:
 
   chatgpt_telegram_bot:
     container_name: chatgpt_telegram_bot
-    command: python3 bot/bot.py
+    command: python3 bot/main.py
     restart: on-failure
     build:
       context: "."
       dockerfile: Dockerfile
-    ports:
-      - 8443:8443
+    expose:
+      - 8443
     volumes:
       - ./:/code/
     depends_on:
@@ -30,7 +30,6 @@ services:
 
   webhook:
     container_name: webhook
-#    command: bash -c "cd bot/ && gunicorn payment_webhook:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
     command: gunicorn payment_webhook:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
     restart: always
     build:
@@ -38,8 +37,8 @@ services:
       dockerfile: ./bot/Dockerfile
     volumes:
       - .:/code/
-    ports:
-      - 8000:8000
+    expose:
+      - 8000
     networks:
       - internal
     environment:
@@ -47,17 +46,15 @@ services:
 
   admin:
     container_name: admin
-#    command: bash -c "cd admin/ && uvicorn main:app --host 0.0.0.0 --port 8080 --reload"
-    command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
-#    command: bash -c "cd admin/ && gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080"
+    command: gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080
     restart: always
     build:
       context: .
       dockerfile: ./admin/Dockerfile
     volumes:
       - ./:/code
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     networks:
       - internal
 
@@ -79,35 +76,36 @@ services:
     networks:
       - internal
 
-#  nginx:
-#    container_name: nginx
-#    build: ./nginx
-#    restart: always
-#    ports:
-#      - 80:80
-#      - 443:443
-#      - 8080:8080
-#    volumes:
-#      - ./certbot/www:/var/www/certbot/
-#      - ./certbot/conf/:/etc/nginx/ssl/
-#    depends_on:
-#      - chatgpt_telegram_bot
-#      - webhook
-#      - admin
-#    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
-#    networks:
-#      - internal
-#
-#  certbot:
-#    container_name: certbot
-#    image: certbot/certbot:latest
-#    restart: unless-stopped
-#    volumes:
-#      - ./certbot/www/:/var/www/certbot/
-#      - ./certbot/conf/:/etc/letsencrypt/
-#    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-#    networks:
-#      - internal
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - ./admin/static:/var/www/chatBot/app/admin/static/
+      - ./certbot/www:/var/www/certbot/
+      - ./certbot/conf/:/etc/nginx/ssl/
+    depends_on:
+      - chatgpt_telegram_bot
+      - webhook
+      - admin
+    command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
+    networks:
+      - internal
+
+  certbot:
+    container_name: certbot
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - ./certbot/www/:/var/www/certbot/
+      - ./certbot/conf/:/etc/letsencrypt/
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - internal
 
 networks:
   internal:
