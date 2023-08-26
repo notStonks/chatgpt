@@ -77,7 +77,7 @@
               </td>
               <td>
               {% for key, val in sum_used_tokens_rub.items() %}
-              {{ key }} : {{ val }} руб.<br>
+              {{ key }} : {{ "%.3f"|format(val) }} руб.<br>
               {% endfor %}
               </td>
             </tr>

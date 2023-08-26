@@ -50,6 +50,28 @@
       padding: 1em;
       overflow: hidden;
     }
+    .right-preference{
+      display: flex;
+      justify-content: space-between;
+      margin: 0.5rem;
+    }
+    .right-preference-item{
+      display: flex;
+      width: 600px;
+      justify-content: space-between;
+      margin: 0.5rem;
+    }
+    .item-inner{
+        float: right;
+        width: 500px;
+
+    }
+
+    .label-inner{
+        float: left;
+        width: 100px;
+
+    }
 
     .preference {
       display: flex;

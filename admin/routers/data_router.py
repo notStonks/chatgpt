@@ -2,7 +2,7 @@ import datetime
 import logging
 from datetime import timedelta
 from typing import Union
-
+import requests
 import ruamel.yaml
 from fastapi import APIRouter, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -30,14 +30,26 @@ def admin(request: Request):
 
     config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(Settings.FILE_NAME))
 
+    data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
+    dollar_rate = data['Valute']['USD']["Value"]
+    openai_rates = config["openai"]
+
+    amounts = [200, 500, 1000]
+    for_1k_tokens = {}
+    for amount in amounts:
+        for_1k_tokens[f"{amount}_gpt3"] = "{:.3f}".format(amount / config[f"tokens_for_{amount}_gpt-3.5-turbo"] * 1000)
+    for amount in amounts:
+        for_1k_tokens[f"{amount}_gpt4"] = "{:.3f}".format(amount / config[f"tokens_for_{amount}_gpt-4"] * 1000)
+
     context = {
         "user": user,
         "request": request,
-        "settings": config
+        "settings": config,
+        "openai_rates": openai_rates,
+        "dollar_rate": dollar_rate,
+        "for_1k_tokens": for_1k_tokens
     }
-    headers = {
-        "Content-Type": "application/json"
-    }
+
     return templates.TemplateResponse("settings.html", context)
 
 
@@ -64,9 +76,7 @@ async def admin(request: Request):
         "request": request,
         "settings": form
     }
-    headers = {
-        "Content-Type": "application/json"
-    }
+
     return RedirectResponse("/admin/settings", status_code=303)
 
 

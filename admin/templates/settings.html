@@ -8,6 +8,7 @@
   <title>Настройки</title>
   <link rel="stylesheet" href='/static/css/edit.css'>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 
 <body>
@@ -23,6 +24,35 @@
         <li><a href="/admin/auth/logout">Выйти</a></li>
 
       </ul>
+    </aside>
+      <aside class="right">
+      <h3>Прайс Open AI (за 1000 токенов)</h3>
+      <div>
+          <div class="right-preference">
+              <div class="right-preference-item">
+            <label class="label-inner" for="">Gpt 3.5</label>
+              <div class="item-inner">ввод: {{ openai_rates['gpt_3.5-turbo_input'] }}$ * {{ dollar_rate }} = {{ "%.3f"|format(openai_rates['gpt_3.5-turbo_input'] * dollar_rate) }} руб.</div>
+              <div class="item-inner">вывод: {{ openai_rates['gpt_3.5-turbo_output'] }}$ * {{ dollar_rate }} = {{ "%.3f"|format(openai_rates['gpt_3.5-turbo_output'] * dollar_rate) }} руб.</div>
+              </div>
+
+              <div class="right-preference-item">
+              <label class="label-inner" for="">Gpt 4</label>
+              <div class="item-inner">ввод: {{ openai_rates['gpt_4_input'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_input'] * dollar_rate) }} руб.</div>
+              <div class="item-inner">вывод: {{ openai_rates['gpt_4_output'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_output'] * dollar_rate) }} руб.</div>
+              </div>
+
+<!--              <div class="right-preference-item">-->
+<!--              <label class="label-inner" for="">Расчет примерного % прибыли</label>-->
+<!--              <div class="item-inner">gpt-3{{ openai_rates['gpt_4_input'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_input'] * dollar_rate) }} руб.</div>-->
+<!--              <div class="item-inner">gpt-3: </div>-->
+<!--              <div class="item-inner">вывод: {{ openai_rates['gpt_4_output'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_output'] * dollar_rate) }} руб.</div>-->
+<!--              </div>-->
+
+          </div>
+      </div>
+<!--      <ul>-->
+<!--        <li><a href="#">Выйти</a></li>-->
+<!--      </ul>-->
     </aside>
     <main class="content">
         <form class="record" action="/admin/settings" method="post">
@@ -40,30 +70,61 @@
             <label for="">Лимит токенов для новых пользователей</label>
             <input type="text" name="tokens_limit_for_new_user" id="" value="{{ settings.tokens_limit_for_new_user }}" />
         </div>
-            <div class="preference">
+
+            <div class="preference price">
             <label for="">Токены за 200 р. (gpt-3.5-turbo)</label>
-            <input type="text" name="tokens_for_200_gpt3" id="" value="{{ settings.tokens_for_200_gpt3 if settings.tokens_for_200_gpt3 else settings['tokens_for_200_gpt-3.5-turbo'] }}" />
+                <div class="price-cluster">
+            <input class="price-input" type="text" name="tokens_for_200_gpt3" id="" value="{{ settings.tokens_for_200_gpt3 if settings.tokens_for_200_gpt3 else settings['tokens_for_200_gpt-3.5-turbo'] }}" />
+                <div class="price-item">
+                    За 1000 токенов: {{ for_1k_tokens['200_gpt3'] }} руб.
+                </div>
+                    </div>
         </div>
-        <div class="preference">
+        <div class="preference price">
             <label for="">Токены за 500 р. (gpt-3.5-turbo)</label>
-            <input type="text" name="tokens_for_500_gpt3" id="" value="{{ settings['tokens_for_500_gpt-3.5-turbo'] }}" />
+            <div class="price-cluster">
+            <input class="price-input" type="text" name="tokens_for_500_gpt3" id="" value="{{ settings['tokens_for_500_gpt-3.5-turbo'] }}" />
+            <div class="price-item">
+                    За 1000 токенов: {{ for_1k_tokens['500_gpt3'] }} руб.
+                </div>
+                </div>
         </div>
-            <div class="preference">
+            <div class="preference price gpt31000">
             <label for="">Токены за 1000 р. (gpt-3.5-turbo)</label>
-            <input type="text" name="tokens_for_1000_gpt3" id="" value="{{ settings['tokens_for_1000_gpt-3.5-turbo'] }}" />
+                <div class="price-cluster">
+            <input class="price-input" type="text" name="tokens_for_1000_gpt3" id="" value="{{ settings['tokens_for_1000_gpt-3.5-turbo'] }}" />
+                <div class="price-item">
+                    За 1000 токенов: {{ for_1k_tokens['1000_gpt3'] }} руб.
+                </div>
+                </div>
         </div>
             <br>
-            <div class="preference">
+            <div class="preference price gpt4200">
             <label for="">Токены за 200 р. (gpt-4)</label>
-            <input type="text" name="tokens_for_200_gpt4" id="" value="{{ settings['tokens_for_200_gpt-4'] }}" />
+                <div class="price-cluster">
+            <input class="price-input" type="text" name="tokens_for_200_gpt4" id="" value="{{ settings['tokens_for_200_gpt-4'] }}" />
+                <div class="price-item">
+                    За 1000 токенов: {{ for_1k_tokens['200_gpt4'] }} руб.
+                </div>
+                </div>
         </div>
-            <div class="preference">
+            <div class="preference price gpt4200">
             <label for="">Токены за 500 р. (gpt-4)</label>
-            <input type="text" name="tokens_for_500_gpt4" id="" value="{{ settings['tokens_for_500_gpt-4'] }}" />
+                <div class="price-cluster">
+            <input class="price-input" type="text" name="tokens_for_500_gpt4" id="" value="{{ settings['tokens_for_500_gpt-4'] }}" />
+                <div class="price-item">
+                    За 1000 токенов: {{ for_1k_tokens['500_gpt4'] }} руб.
+                </div>
+                </div>
         </div>
-            <div class="preference">
+            <div class="preference price gpt41000">
             <label for="">Токены за 1000 р. (gpt-4)</label>
-            <input type="text" name="tokens_for_1000_gpt4" id="" value="{{ settings['tokens_for_1000_gpt-4'] }}" />
+                <div class="price-cluster">
+            <input class="price-input" type="text" name="tokens_for_1000_gpt4" id="" value="{{ settings['tokens_for_1000_gpt-4'] }}" />
+                <div class="price-item">
+                    За 1000 токенов: {{ for_1k_tokens['1000_gpt4'] }} руб.
+                </div>
+                </div>
         </div>
             <br>
             <div class="preference">

@@ -183,6 +183,8 @@ class Database:
 
         n_used_tokens_dict[model]["n_remaining_tokens"] += tokens_amount
 
+        self.update_n_bought_tokens(user_id, model, tokens_amount)
+
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
 
     def update_n_used_tokens(self, user_id: int, model: str, n_input_tokens: int, n_output_tokens: int):
@@ -193,7 +195,6 @@ class Database:
             n_used_tokens_dict[model]["n_input_tokens"] += n_input_tokens
             n_used_tokens_dict[model]["n_output_tokens"] += n_output_tokens
             n_used_tokens_dict[model]["n_remaining_tokens"] -= n_input_tokens + n_output_tokens
-
         else:
             n_used_tokens_dict[model] = {
                 "n_input_tokens": n_input_tokens,
@@ -220,7 +221,7 @@ class Database:
         else:
             n_bought_tokens_dict[model] = quantity
 
-        self.set_user_attribute(user_id, "n_used_tokens", n_bought_tokens_dict)
+        self.set_user_attribute(user_id, "n_bought_tokens", n_bought_tokens_dict)
 
     def get_dialog_messages(self, user_id: int, dialog_id: Optional[str] = None):
         self.check_if_user_exists(user_id, raise_exception=True)
@@ -242,14 +243,10 @@ class Database:
             {"$set": {"messages": dialog_messages}}
         )
 
-    # --- Admin part
-    def get_user(self, user_id: int):
-        self.check_if_user_exists(user_id, raise_exception=True)
-        user_dict = self.user_collection.find_one({"_id": user_id})
+    # # --- Admin part
+    # def get_user(self, user_id: int):
+    #     self.check_if_user_exists(user_id, raise_exception=True)
+    #     user_dict = self.user_collection.find_one({"_id": user_id})
+    #
+    #     return user_dict
 
-        return user_dict
-
-db = Database()
-
-for i in range(10):
-    db.set_order_attribute(i, "status", "CONFIRMED")
