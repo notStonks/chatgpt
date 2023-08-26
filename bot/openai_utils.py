@@ -1,7 +1,8 @@
+import openai
+import tiktoken
+
 import config
 
-import tiktoken
-import openai
 openai.api_key = config.openai_api_key
 
 

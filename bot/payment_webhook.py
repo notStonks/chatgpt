@@ -1,11 +1,13 @@
 import logging
+from datetime import datetime
+
+import telegram
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
-import database
-import config
-import telegram
-from utils import get_buy_keyboard, get_payment_url
 
+import config
+import database
+from utils import get_buy_keyboard, get_payment_url
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,12 +39,16 @@ async def _confirmed_payment(order_id: str, amount: int):
     и меняет статус в БД
     """
     try:
-        user_id = db.get_user_id(order_id)
+        user_id = db.get_order_attribute(order_id, "user_id")
+        db.set_order_attribute(order_id, "status", "CONFIRMED")
         chat_id = db.get_user_attribute(user_id, "chat_id")
         current_model = db.get_user_attribute(user_id, "current_model")
         amount = amount // 100
         tokens_amount = config.config_yaml[f"tokens_for_{amount}_{current_model}"]
         db.update_n_remaining_tokens(user_id, tokens_amount)
+
+        db.set_user_attribute(user_id, "payment_date", datetime.now())
+
         bot = telegram.Bot(config.telegram_token)
         async with bot:
             await bot.send_message(chat_id=chat_id, text=f"Успешно куплено {tokens_amount} токенов")
@@ -62,7 +68,9 @@ async def _rejected_payment(order_id: str, amount: str):
         payment_url = get_payment_url(order_id, amount)
         buy_keyboard = get_buy_keyboard(payment_url)
 
-        user_id = db.get_user_id(order_id)
+        user_id = db.get_order_attribute(order_id, "user_id")
+        db.set_order_attribute(order_id, "status", "REJECTED")
+        
         chat_id = db.get_user_attribute(user_id, "chat_id")
 
         bot = telegram.Bot(config.telegram_token)

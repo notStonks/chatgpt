@@ -1,0 +1,22 @@
+telegram_token: ""
+openai_api_key: ""
+terminal_key: ""
+password: ""
+notification_url: "https://"
+webhook_url: "https://"
+allowed_telegram_usernames: []  # if empty, the bot is available to anyone. pass a username string to allow it and/or user ids as positive integers and/or channel ids as negative integers
+new_dialog_timeout: 600  # new dialog starts after timeout (in seconds)
+return_n_generated_images: 1
+n_chat_modes_per_page: 5
+enable_message_streaming: true  # if set, messages will be shown to user word-by-word
+
+
+tokens_limit_for_new_user: 4000
+
+tokens_for_200_gpt-3.5-turbo: 20000
+tokens_for_500_gpt-3.5-turbo: 70000
+tokens_for_1000_gpt-3.5-turbo: 120000
+
+tokens_for_200_gpt-4: 10000
+tokens_for_500_gpt-4: 50000
+tokens_for_1000_gpt-4: 100000

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/index.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Pray GPT Bot</h1>
+    </header>
+    <aside class="left">
+      <ul>
+        <li><a href="/admin">Главная</a></li>
+        <li><a href="/admin/settings">Настройки</a></li>
+        <li><a href="/auth/logout">Выйти</a></li>
+      </ul>
+    </aside>
+    <aside class="right">
+      <h3>Статистика</h3>
+      <div>
+        <form class="record" action="/admin/statistic" method="post">
+<!--          <input type="hidden" name="all_time" value="all_time" />-->
+          <input class="spinner button" name="all_time" type="submit" value="За все время">
+        </form>
+        <br>
+        <br>
+        <form class="record" action="/admin/statistic" method="post">
+          <input class="spinner button" name="month" type="submit" value="За 30 дней">
+        </form>
+        <br>
+        <br>
+        <form class="record" action="/admin/statistic" method="post">
+        <div class="preference">
+            <label>Начало</label>
+            <input type="date"  name="start" value="{{ start_date if start_date else min_date}}" min="{{ min_date }}" max="{{ max_date }}" />
+        </div>
+        <div class="preference">
+            <label>Конец</label>
+            <input type="date" name="end" min="{{ min_date }}" max="{{ max_date }}" value="{{ end_date if end_date else max_date }}" />
+        </div>
+        <br>
+        <input class="spinner button" type="submit" value="Выбрать диапазон">
+        </form>
+
+      </div>
+    </aside>
+    <main class="content">
+        <div class="tbl-header">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <thead>
+            <tr>
+              <th>Пользователи+</th>
+              <th>Поступления+</th>
+              <th>Затраченные токены-</th>
+              <th>Затраченные токены в рублях-</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+      <div class="tbl-content">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tbody>
+            <tr>
+              <td>{{ count }}</td>
+              <td>{{ income }} руб. </td>
+              <td>
+              {% for key, val in sum_used_tokens.items() %}
+              {{ key }} : {{ val }} <br>
+              {% endfor %}
+              </td>
+              <td>
+              {% for key, val in sum_used_tokens_rub.items() %}
+              {{ key }} : {{ val }} руб.<br>
+              {% endfor %}
+              </td>
+            </tr>
+
+
+          </tbody>
+        </table>
+
+      </div>
+
+      <hr><br><br><br><br><br>
+    </main>
+
+  </div>
+<!--  <div class="footer"><footer>adadasda</footer></div>-->
+
+</body>
+
+
+</html>

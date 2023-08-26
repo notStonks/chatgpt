@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главная</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/index.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Pray GPT Bot</h1>
+    </header>
+    <aside class="left">
+      <ul>
+        <li><a href="/admin/statistic">Статистика</a></li>
+        <li><a href="/admin/settings">Настройки</a></li>
+        <li><a href="/auth/logout">Выйти</a></li>
+      </ul>
+    </aside>
+    <aside class="right">
+      <h3>Статистика</h3>
+      <div>
+        <label for="">Пользователи:</label> {{ count }}
+      </div>
+<!--      <ul>-->
+<!--        <li><a href="#">Выйти</a></li>-->
+<!--      </ul>-->
+    </aside>
+    <main class="content">
+        <div class="tbl-header">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <thead>
+            <tr>
+              <th>Telegram id</th>
+              <th>Username</th>
+              <th>Имя</th>
+              <th>Фамилия</th>
+              <th>Бан</th>
+<!--              <th>Дата последнего платежа</th>-->
+<!--              <th>Всего куплено токенов</th>-->
+<!--              <th>Номер телефона</th>-->
+            </tr>
+          </thead>
+        </table>
+      </div>
+      <div class="tbl-content">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tbody>
+           {% for user in users %}
+            <tr>
+              <td><a href="/admin/{{ user._id }}">{{ user._id }}</a></td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.first_name }}</td>
+              <td>{{ user.last_name }}</td>
+              <td><input type="checkbox" name="ban" id="" value='True' onclick="return false;" {{ 'checked' if  user.ban  }} /></td>
+<!--              <td>{{ user.payment_date }}</td>-->
+<!--              <td>{{ user.n_bought_tokens }}</td>-->
+<!--              <td>{{ user.phone }}</td>-->
+            </tr>
+              {% endfor %}
+
+
+          </tbody>
+        </table>
+
+      </div>
+      <div class="page">
+      <ul class="pagination">
+    <li class="icon">
+      <a href="/admin?page={{ current_page - 1 if current_page > 1 else current_page }}"><span class="fas fa-angle-left"></span>Пред.</a>
+    </li>
+        {% for page in range(1, pages+1) %}
+        {% if current_page >= page - 2 and current_page <= page + 1 %}
+          <li><a href="/admin?page={{ page }}">{{ page }}</a></li>
+        {% endif %}
+        {% endfor %}
+    <li class="icon">
+      <a href="/admin?page={{ current_page if current_page == pages else current_page + 1 }}">След.<span class="fas fa-angle-right"></span></a>
+    </li>
+  </ul>
+        </div>
+      <hr><br>
+    </main>
+
+  </div>
+<!--  <div class="footer"><footer>adadasda</footer></div>-->
+
+</body>
+
+
+</html>
