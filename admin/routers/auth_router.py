@@ -32,41 +32,6 @@ def login_for_access_token(
     )
     return {settings.COOKIE_NAME: access_token, "token_type": "bearer"}
 
-
-# --------------------------------------------------------------------------
-# Home Page
-# --------------------------------------------------------------------------
-# @router.get("/", response_class=HTMLResponse)
-# def index(request: Request):
-#     try:
-#         user = get_current_user_from_cookie(request)
-#     except:
-#         user = None
-#     context = {
-#         "user": user,
-#         "request": request,
-#     }
-#     return templates.TemplateResponse("index.html", context)
-
-
-# --------------------------------------------------------------------------
-# admin Page
-# --------------------------------------------------------------------------
-# A admin page that only log in users can access.
-# @router.get("/admin", response_class=HTMLResponse)
-# def index(request: Request):
-#     try:
-#         user: User = get_current_user_from_cookie(request)
-#     except Exception as e:
-#         return RedirectResponse("/auth/login")
-#     context = {
-#         "user": user,
-#         "request": request
-#     }
-#
-#     return templates.TemplateResponse("admin.html", context)
-
-
 # --------------------------------------------------------------------------
 # Login - GET
 # --------------------------------------------------------------------------
@@ -104,6 +69,6 @@ async def login_post(request: Request):
 # --------------------------------------------------------------------------
 @router.get("/admin/auth/logout", response_class=HTMLResponse)
 def login_get():
-    response = RedirectResponse(url="/")
+    response = RedirectResponse(url="/admin")
     response.delete_cookie(settings.COOKIE_NAME)
     return response

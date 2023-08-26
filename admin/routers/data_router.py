@@ -119,7 +119,7 @@ def statistic(request: Request,
         start_str = start
         end_str = end
         start = datetime.datetime(*[int(i) for i in start.split("-")])
-        end = datetime.datetime(*[int(i) for i in end.split("-")])
+        end = datetime.datetime(*[int(i) for i in end.split("-")]) + timedelta(hours=23, minutes=55)
     else:
         start_str = datetime.datetime(2023, 8, 3).strftime("%Y-%m-%d")
         end_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -188,7 +188,7 @@ def user(request: Request, user_id: int):
                                                                 config.config_yaml[f"rub_for_token_{key}"] / 1000)
 
     if "payment_date" in user_dict and user_dict["payment_date"] is not None:
-        user_dict["payment_date"] = (user_dict["payment_date"] + timedelta(hours=3)).strftime('%m.%d.%Y %H:%M')
+        user_dict["payment_date"] = (user_dict["payment_date"] + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M')
 
     context = {
         "user": user,

@@ -45,7 +45,7 @@ async def _confirmed_payment(order_id: str, amount: int):
         current_model = db.get_user_attribute(user_id, "current_model")
         amount = amount // 100
         tokens_amount = config.config_yaml[f"tokens_for_{amount}_{current_model}"]
-        db.update_n_remaining_tokens(user_id, tokens_amount)
+        db.update_n_remaining_tokens(user_id, tokens_amount, amount)
         db.set_user_attribute(user_id, "payment_date", datetime.now())
         bot = telegram.Bot(config.telegram_token)
         async with bot:

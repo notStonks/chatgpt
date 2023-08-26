@@ -118,10 +118,36 @@
             <label for="">Всего куплено токенов</label>
             {% if user_dict.n_bought_tokens %}
                 {% for key in user_dict.n_bought_tokens.keys() %}
-<!--                    <input type="text" name="" id="" value="{{ user_dict.n_bought_tokens[key] }}" readonly/>-->
-                    <div class="out-txt">
-                    <div class="txt">{{ user_dict.n_bought_tokens[key] }}</div>
+<!--                    <div class="out-txt">-->
+<!--                    <div class="txt">{{ user_dict.n_bought_tokens[key] }}</div>-->
+<!--                    </div>-->
+                    <div class="tokens">
+                    <div class="inner-tokens token-txt">
+                            <div class="label">
+                                    <div class="inner-label">
+                                    <label for="">{{ key }}</label>
+                                    </div>
+                            </div>
+                            <div class="token-txt-inner">
+                                    <div class="txt-inner">
+                                    {{ user_dict.n_bought_tokens[key].amount }}
+                                    </div>
+                                </div>
+                            <br>
+
+                            <div class="rub2">
+                               <div class="label">
+                                    <div class="inner-label">
+                                    <label for="">В рублях</label>
+                                    </div>
+                                </div>
+                                    <div class="txt-inner-rub">
+                                    {{ user_dict.n_bought_tokens[key].rub }}
+                                    </div>
+                                </div>
+                        </div><br>
                     </div>
+
                 {% endfor %}
             {% else %}
 <!--                <input type="text" name="" id="" value="" readonly/>-->

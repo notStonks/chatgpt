@@ -64,13 +64,14 @@ class Database:
             },
 
             "n_bought_tokens": {
-                config.models["available_text_models"][0]: 0
+                config.models["available_text_models"][0]: {
+                    "amount": 0,
+                    "rub": 0
+                }
             },
 
-            # "n_remaining_tokens": 5000,
-
             "n_generated_images": 0,
-            "n_transcribed_seconds": 0.0, # voice message transcription
+            "n_transcribed_seconds": 0.0,
 
             "payment_date": None,
 
@@ -177,13 +178,13 @@ class Database:
         self.check_if_user_exists(user_id, raise_exception=True)
         self.user_collection.update_one({"_id": user_id}, {"$set": {key: value}})
 
-    def update_n_remaining_tokens(self, user_id: int,  tokens_amount: int):
+    def update_n_remaining_tokens(self, user_id: int,  tokens_amount: int, rub: int):
         n_used_tokens_dict = self.get_user_attribute(user_id, "n_used_tokens")
         model = self.get_user_attribute(user_id, "current_model")
 
         n_used_tokens_dict[model]["n_remaining_tokens"] += tokens_amount
 
-        self.update_n_bought_tokens(user_id, model, tokens_amount)
+        self.update_n_bought_tokens(user_id, model, tokens_amount, rub)
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
 
@@ -213,13 +214,15 @@ class Database:
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
         # self.set_user_attribute(user_id, "n_remaining_tokens", n_remaining_tokens)
 
-    def update_n_bought_tokens(self, user_id: int, model: str, quantity: int):
+    def update_n_bought_tokens(self, user_id: int, model: str, quantity: int, rub: int):
         n_bought_tokens_dict = self.get_user_attribute(user_id, "n_bought_tokens")
 
         if model in n_bought_tokens_dict:
-            n_bought_tokens_dict[model] += quantity
+            n_bought_tokens_dict[model]["amount"] += quantity
+            n_bought_tokens_dict[model]["rub"] += rub
         else:
-            n_bought_tokens_dict[model] = quantity
+            n_bought_tokens_dict[model]["amount"] = quantity
+            n_bought_tokens_dict[model]["rub"] = rub
 
         self.set_user_attribute(user_id, "n_bought_tokens", n_bought_tokens_dict)
 
@@ -250,3 +253,9 @@ class Database:
     #
     #     return user_dict
 
+
+db = Database()
+db.set_user_attribute(
+    1078699,
+    "n_bought_tokens",
+    {"gpt-3.5-turbo": {"amount": 20000, "rub": 200}})

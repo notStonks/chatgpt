@@ -108,6 +108,10 @@
         float: left;
     }
 
+    .txt-inner-rub{
+        padding-left: 10px;
+        float: left;
+    }
     .label{
         float: left;
 
@@ -144,6 +148,7 @@
         width: 200px;
         float: left;
     }
+
     label{
         padding-right: 10px;
     }
