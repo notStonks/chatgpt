@@ -89,7 +89,6 @@ def statistic(request: Request):
 
     income, count, days = db.get_statistic()
     sum_used_tokens, sum_used_tokens_rub, income = stats_count(income, days)
-    logger.info(sum_used_tokens)
     context = {
         "user": user,
         "request": request,

@@ -125,16 +125,9 @@ class Database:
 
     def add_new_day(self,):
         id = str(uuid.uuid4())
-        # date = datetime.datetime(day.year, day.month, day.day, 0, 0, 0)
         date = datetime.date.today().isoformat()
         n_used_tokens = {}
         for m in config.models["available_text_models"]:
-            # if model == m:
-            #     n_used_tokens[m] = {
-            #         "n_input_tokens": n_input_tokens,
-            #         "n_output_tokens": n_output_tokens,
-            #     }
-            # else:
             n_used_tokens[m] = {
                 "n_input_tokens": 0,
                 "n_output_tokens": 0,
@@ -245,17 +238,3 @@ class Database:
             {"_id": dialog_id, "user_id": user_id},
             {"$set": {"messages": dialog_messages}}
         )
-
-    # # --- Admin part
-    # def get_user(self, user_id: int):
-    #     self.check_if_user_exists(user_id, raise_exception=True)
-    #     user_dict = self.user_collection.find_one({"_id": user_id})
-    #
-    #     return user_dict
-
-
-db = Database()
-db.set_user_attribute(
-    1078699,
-    "n_bought_tokens",
-    {"gpt-3.5-turbo": {"amount": 20000, "rub": 200}})
