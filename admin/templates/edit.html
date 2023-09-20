@@ -19,7 +19,6 @@
       <ul>
 
         <li><a href="/admin">Главная</a></li>
-<!--        <li><a  href="#back">Назад</a></li>-->
         <li><a href="/admin/auth/logout">Выйти</a></li>
 
       </ul>
@@ -28,28 +27,24 @@
         <form class="record" action="/admin/change/{{ user_dict._id }}" method="post">
         <div class="preference">
             <label for="">Telegram id</label>
-<!--            <input type="text" name="" id="" value="{{ user_dict._id }}" readonly/>-->
             <div class="out-txt">
                 <div class="txt">{{ user_dict._id }}</div>
             </div>
         </div>
         <div class="preference">
             <label for="">Username</label>
-<!--            <input type="text" name="" id="" value="{{ user_dict.username }}" readonly/>-->
             <div class="out-txt">
                 <div class="txt">{{ user_dict.username }}</div>
             </div>
         </div>
         <div class="preference">
             <label for="">Имя</label>
-<!--            <input type="text" name="" id="" value="{{ user_dict.first_name }}" readonly/>-->
             <div class="out-txt">
             <div class="txt">{{ user_dict.first_name }}</div>
             </div>
         </div>
         <div class="preference">
             <label for="">Фамилия</label>
-<!--            <input type="text" name="" id="" value="{{ user_dict.last_name }}" readonly/>-->
             <div class="out-txt">
             <div class="txt">{{ user_dict.last_name }}</div>
             </div>
@@ -57,10 +52,8 @@
             <div class="preference">
             <label for="">Осталось токенов</label>
                     <div class="tokens">
-<!--            <input type="text" name="" id="" value="{{ user_dict.n_used_tokens }}" readonly/>-->
                 {% for key in user_dict.n_used_tokens.keys() %}
                         <div class="inner-tokens">
-<!--                            <label for="">{{ key }}</label>-->
                             <div class="label">
                                     <div class="inner-label">
                                     <label for="">{{ key }}</label>
@@ -90,7 +83,6 @@
             <div class="preference">
             <label for="">Всего затрачено токенов</label>
                     <div class="tokens">
-<!--            <input type="text" name="" id="" value="{{ user_dict.n_used_tokens }}" readonly/>-->
                         {% for key in user_dict.n_used_tokens.keys() %}
                             <div class="inner-tokens token-txt">
 
@@ -106,21 +98,18 @@
                                     {{ user_dict.n_used_tokens[key]['used_tokens'] }}
                                     </div>
                                 </div>
-<!--                                <input type="text" name="" id="" value="{{ user_dict.n_used_tokens[key]['used_tokens'] }}" readonly/> <br>-->
                             </div><br>
 
                         {% endfor %}
                         </div>
                      </div>
-<!--            </div>-->
+
         <div class="preference">
 
             <label for="">Всего куплено токенов</label>
             {% if user_dict.n_bought_tokens %}
                 {% for key in user_dict.n_bought_tokens.keys() %}
-<!--                    <div class="out-txt">-->
-<!--                    <div class="txt">{{ user_dict.n_bought_tokens[key] }}</div>-->
-<!--                    </div>-->
+
                     <div class="tokens">
                     <div class="inner-tokens token-txt">
                             <div class="label">
@@ -150,7 +139,7 @@
 
                 {% endfor %}
             {% else %}
-<!--                <input type="text" name="" id="" value="" readonly/>-->
+
             <div class="out-txt">
                     <div class="txt"></div>
             </div>
@@ -159,14 +148,13 @@
         </div>
             <div class="preference">
             <label for="">Дата последнего платежа</label>
-<!--            <input type="text" name="" id="" value="{{ user_dict.payment_date }}" readonly/>-->
+
                 <div class="out-txt">
                 <div class="txt">{{ user_dict.payment_date }}</div>
                 </div>
             </div>
         <div class="preference">
             <label for="">Номер телефона</label>
-<!--            <input type="text" name="" id="" value="{{ user_dict.phone }}" readonly/>-->
             <div class="out-txt">
             <div class="txt">{{ user_dict.phone }}</div>
             </div>
@@ -190,7 +178,6 @@
     </main>
 
   </div>
-<!--  <div class="footer"><footer>adadasda</footer></div>-->
 
 </body>
 

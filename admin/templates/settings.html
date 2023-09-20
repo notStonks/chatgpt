@@ -41,18 +41,6 @@
               <div class="item-inner">вывод: {{ openai_rates['gpt_4_output'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_output'] * dollar_rate) }} руб.</div>
               </div>
 
-<!--              <div class="right-preference-item">-->
-<!--              <label class="label-inner" for="">Расчет примерного % прибыли</label>-->
-<!--              <div class="item-inner">gpt-3{{ openai_rates['gpt_4_input'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_input'] * dollar_rate) }} руб.</div>-->
-<!--              <div class="item-inner">gpt-3: </div>-->
-<!--              <div class="item-inner">вывод: {{ openai_rates['gpt_4_output'] }}$ * {{ dollar_rate }} = {{ "%.2f"|format(openai_rates['gpt_4_output'] * dollar_rate) }} руб.</div>-->
-<!--              </div>-->
-
-          </div>
-      </div>
-<!--      <ul>-->
-<!--        <li><a href="#">Выйти</a></li>-->
-<!--      </ul>-->
     </aside>
     <main class="content">
         <form class="record" action="/admin/settings" method="post">
@@ -128,7 +116,7 @@
         </div>
             <br>
             <div class="preference">
-            <label for="">Для расчета баланса в рублях</label>
+            <label for="">Для расчета баланса в рублях затраченных токенов и оставшихся токенов</label>
         </div>
             <div class="preference">
             <label for="">1000 токенов gpt-3.5-turbo в руб.</label>
@@ -139,6 +127,15 @@
             <input type="text" name="token_gpt4" id="" value="{{ settings['rub_for_token_gpt-4'] }}" />
         </div>
             <br>
+            <div class="preference">
+            <label for="">Включить gpt-4</label>
+                <div class="out-txt">
+                    <div class="txt">
+                    <input  type="checkbox" name="available_gpt4" id="" value='True' {{ 'checked' if  available_gpt4 }}/>
+                    </div>
+                </div>
+            </div>
+            <br>
             <br>
         <input class="spinner button" type="submit" value="Сохранить">
             <br>
@@ -148,7 +145,6 @@
     </main>
 
   </div>
-<!--  <div class="footer"><footer>adadasda</footer></div>-->
 
 </body>
 

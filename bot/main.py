@@ -249,6 +249,11 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
         current_model = db.get_user_attribute(user_id, "current_model")
+
+        if current_model not in config.models['available_text_models']:
+            current_model = config.models['available_text_models'][0]
+        db.set_user_attribute(user_id, "current_model", current_model)
+
         n_used_tokens = db.get_user_attribute(user_id, "n_used_tokens")
         n_remaining_tokens = n_used_tokens[current_model]["n_remaining_tokens"]
 
@@ -673,12 +678,9 @@ async def show_balance_handle(update: Update, context: CallbackContext):
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
 
     # count total usage statistics
-    # total_n_spent_dollars = 0
     total_n_used_tokens = 0
 
     n_used_tokens_dict = db.get_user_attribute(user_id, "n_used_tokens")
-    # n_generated_images = db.get_user_attribute(user_id, "n_generated_images")
-    # n_transcribed_seconds = db.get_user_attribute(user_id, "n_transcribed_seconds")
 
     details_text = "🏷️ Подробности:\n"
     for model_key in sorted(n_used_tokens_dict.keys()):
@@ -687,39 +689,14 @@ async def show_balance_handle(update: Update, context: CallbackContext):
             n_used_tokens_dict[model_key]["n_remaining_tokens"]
         total_n_used_tokens += n_input_tokens + n_output_tokens
 
-        # n_input_spent_dollars = config.models["info"][model_key]["price_per_1000_input_tokens"] * (n_input_tokens / 1000)
-        # n_output_spent_dollars = config.models["info"][model_key]["price_per_1000_output_tokens"] * (n_output_tokens / 1000)
-        # total_n_spent_dollars += n_input_spent_dollars + n_output_spent_dollars
         if model_key == current_model:
             details_text += "✅ "
         else:
             details_text += "- "
-        # details_text += f"{model_key}: <b>{n_input_spent_dollars + n_output_spent_dollars:.03f}$</b> / <b>{n_input_tokens + n_output_tokens} tokens</b>\n"
         details_text += f"{model_key}: потрачено <b>{n_input_tokens + n_output_tokens} токенов</b>\n"
         details_text += f"  Осталось токенов: {n_remaining_tokens}\n"
 
-    # image generation
-    # image_generation_n_spent_dollars = config.models["info"]["dalle-2"]["price_per_1_image"] * n_generated_images
-    # if n_generated_images != 0:
-    #     # details_text += f"- DALL·E 2 (image generation): <b>{image_generation_n_spent_dollars:.03f}$</b> / <b>{n_generated_images} generated images</b>\n"
-    #     details_text += f"- DALL·E 2 (image generation): <b>{n_generated_images} generated images</b>\n"
-
-    # total_n_spent_dollars += image_generation_n_spent_dollars
-
-    # voice recognition
-    # voice_recognition_n_spent_dollars = config.models["info"]["whisper"]["price_per_1_min"] * (
-    #             n_transcribed_seconds / 60)
-    # if n_transcribed_seconds != 0:
-    #     # details_text += f"- Whisper (voice recognition): <b>{voice_recognition_n_spent_dollars:.03f}$</b> / <b>{n_transcribed_seconds:.01f} seconds</b>\n"
-    #     details_text += f"- Whisper (voice recognition): <b>{n_transcribed_seconds:.01f} seconds</b>\n"
-
-    # total_n_spent_dollars += voice_recognition_n_spent_dollars
-
-    # n_remaining_tokens = db.get_user_attribute(user_id, "n_remaining_tokens")
-
-    # text = f"You spent <b>{total_n_spent_dollars:.03f}$</b>\n"
     text = f"Всего вы потратили <b>{total_n_used_tokens}</b> токенов\n\n"
-    # text += f"У вас осталось <b>{n_remaining_tokens}</b> токенов\n\n"
     text += details_text + "\n"
 
     text += "Купить токены для выбранной модели: \n"
@@ -746,13 +723,6 @@ async def pay_handle(update: Update, context: CallbackContext):
 
     logger.info(f"Tokens for pay: {tokens_for_sum}")
 
-    # tokens_limit_for_buying: int = config.tokens_limit_for_buying
-
-    # if n_remaining_tokens + tokens_for_sum > tokens_limit_for_buying:
-    #     # await update.message.reply_text()
-    #     await update.callback_query.message.reply_text("Слишком много токенов", parse_mode=ParseMode.HTML)
-    #     return
-
     order_id = db.add_new_order(user_id, pay_sum)
     url = get_payment_url(order_id, pay_sum)
     inlinekeyboard = get_buy_keyboard(url)
@@ -771,15 +741,8 @@ async def error_handle(update: Update, context: CallbackContext) -> None:
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
     try:
-        # collect error message
-        # tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
-        # tb_string = "".join(tb_list)
-        # update_str = update.to_dict() if isinstance(update, Update) else str(update)
         message = (
             f"An exception was raised while handling an update\n"
-            # f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
-            # "</pre>\n\n"
-            # f"<pre>{html.escape(tb_string)}</pre>"
         )
 
         # split text into multiple messages due to 4096 character limit
@@ -835,8 +798,6 @@ def run_bot() -> None:
     application.add_handler(CommandHandler("new", new_dialog_handle, filters=user_filter))
     application.add_handler(CommandHandler("cancel", cancel_handle, filters=user_filter))
 
-    # application.add_handler(MessageHandler(filters.VOICE & user_filter, voice_message_handle))
-
     application.add_handler(CommandHandler("mode", show_chat_modes_handle, filters=user_filter))
     application.add_handler(CallbackQueryHandler(show_chat_modes_callback_handle, pattern="^show_chat_modes"))
     application.add_handler(CallbackQueryHandler(set_chat_mode_handle, pattern="^set_chat_mode"))
@@ -851,14 +812,16 @@ def run_bot() -> None:
     application.add_error_handler(error_handle)
 
     # start the bot
-    # application.run_polling()
+    application.run_polling()
     # application.bot.set_webhook(url=url)
 
-    application.run_webhook(
-        listen='0.0.0.0',
-        port=8443,
-        webhook_url=f"{config.webhook_url}",
-        drop_pending_updates=True)
+    # application.run_webhook(
+    #     listen='0.0.0.0',
+    #     port=8443,
+    #     # webhook_url=f"{config.webhook_url}",
+    #     url_path='/bot',
+    #     webhook_url="https://1cb8-5-16-113-195.ngrok-free.app",
+    #     drop_pending_updates=True)
 
 
 if __name__ == "__main__":

@@ -17,19 +17,20 @@ class Database:
         self.day_collection = self.db["day"]
 
     # --- Admin part
-    def get_users(self, page: int, limit: int):
+    def get_users(self, page: int, limit: int, search: str):
         # self.check_if_user_exists(user_id, raise_exception=True)
         user_dict = (self.user_collection.
-                     find({},
+                     find({"username": {"$regex": search, '$options': 'i'}},
                           {"_id": 1, "username": 1,
                            "first_name": 1, "last_name": 1,
                            "payment_date": 1, "n_bought_tokens": 1,
                            "phone": 1, "ban": 1}).skip((page - 1) * limit).limit(limit))
 
-        return user_dict, self.user_collection.count()
+        count = self.user_collection.estimated_document_count() if search == "" else user_dict.count()
+
+        return user_dict, count
 
     def get_user(self, user_id: int):
-        # self.check_if_user_exists(user_id, raise_exception=True)
         user_dict = user_dict = self.user_collection.find_one({"_id": user_id},
         {"_id": 1, "username": 1, "first_name": 1, "last_name": 1, "payment_date": 1, "n_used_tokens": 1, "n_bought_tokens": 1, "phone": 1, "ban": 1})
 

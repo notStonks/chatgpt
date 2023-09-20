@@ -197,15 +197,19 @@ class Database:
             }
 
         id, today = self.get_day()
+        if model in today:
+            today[model]["n_input_tokens"] += n_input_tokens
+            today[model]["n_output_tokens"] += n_output_tokens
+        else:
+            today[model] = {
+                "n_input_tokens": n_input_tokens,
+                "n_output_tokens": n_output_tokens,
+            }
 
-        today[model]["n_input_tokens"] += n_input_tokens
-        today[model]["n_output_tokens"] += n_output_tokens
         self.update_day(id, today)
 
-        # n_remaining_tokens -= n_input_tokens + n_output_tokens
 
         self.set_user_attribute(user_id, "n_used_tokens", n_used_tokens_dict)
-        # self.set_user_attribute(user_id, "n_remaining_tokens", n_remaining_tokens)
 
     def update_n_bought_tokens(self, user_id: int, model: str, quantity: int, rub: int):
         n_bought_tokens_dict = self.get_user_attribute(user_id, "n_bought_tokens")
@@ -214,8 +218,10 @@ class Database:
             n_bought_tokens_dict[model]["amount"] += quantity
             n_bought_tokens_dict[model]["rub"] += rub
         else:
-            n_bought_tokens_dict[model]["amount"] = quantity
-            n_bought_tokens_dict[model]["rub"] = rub
+            n_bought_tokens_dict[model] = {
+                "amount": quantity,
+                "rub":  rub,
+            }
 
         self.set_user_attribute(user_id, "n_bought_tokens", n_bought_tokens_dict)
 

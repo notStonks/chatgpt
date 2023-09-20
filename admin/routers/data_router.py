@@ -41,27 +41,44 @@ def admin(request: Request):
     for amount in amounts:
         for_1k_tokens[f"{amount}_gpt4"] = "{:.3f}".format(amount / config[f"tokens_for_{amount}_gpt-4"] * 1000)
 
+    models, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open("../config/models.yml"))
+    if "gpt-4" in models['available_text_models']:
+        available_gpt4 = True
+    else:
+        available_gpt4 = False
+
     context = {
         "user": user,
         "request": request,
         "settings": config,
         "openai_rates": openai_rates,
         "dollar_rate": dollar_rate,
-        "for_1k_tokens": for_1k_tokens
+        "for_1k_tokens": for_1k_tokens,
+        "available_gpt4": available_gpt4
     }
 
     return templates.TemplateResponse("settings.html", context)
 
 
 @router.post("/admin/settings", response_class=HTMLResponse)
-async def admin(request: Request):
+async def admin(request: Request, available_gpt4: bool = Form(False)):
     form = SettingsForm(request)
     await form.load_data()
-    logger.info(form.__dict__)
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
         return RedirectResponse("/admin/auth/login")
+
+    models, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open("../config/models.yml"))
+    if available_gpt4 and "gpt-4" not in models['available_text_models']:
+        models['available_text_models'] = ["gpt-3.5-turbo", "gpt-4"]
+    if not available_gpt4 and "gpt-4" in models['available_text_models']:
+        models['available_text_models'] = ["gpt-3.5-turbo"]
+
+    yaml = ruamel.yaml.YAML()
+    yaml.indent(mapping=ind, sequence=ind, offset=bsi)
+    with open("../config/models.yml", 'w') as fp:
+        yaml.dump(models, fp)
 
     config, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(Settings.FILE_NAME))
     update_config(config, form)
@@ -151,21 +168,24 @@ def statistic(request: Request,
 
 
 @router.get("/admin", response_class=HTMLResponse)
-def admin(request: Request, page: int = 1, limit: int = 10):
+def admin(request: Request, page: int = 1, limit: int = 10, search: str = ""):
     try:
         user: User = get_current_user_from_cookie(request)
     except Exception as e:
         return RedirectResponse("/admin/auth/login")
-    users, count = db.get_users(page, limit)
+    users, count = db.get_users(page, limit, search)
+    logger.info(users)
 
-    pages = count / limit if count % limit == 0 else count // limit + 1
+    pages = count // limit if count % limit == 0 else count // limit + 1
+
     context = {
         "user": user,
         "request": request,
         "users": users,
         "count": count,
         "current_page": page,
-        "pages": pages
+        "pages": pages,
+        "search": search,
     }
 
     return templates.TemplateResponse("admin.html", context)

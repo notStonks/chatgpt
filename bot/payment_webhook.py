@@ -76,5 +76,3 @@ async def _rejected_payment(order_id: str, amount: str):
 
     except Exception as _exec:
         logger.error(f"{_exec}")
-        # return JsonResponse({"Error": "Some error occured."})
-
